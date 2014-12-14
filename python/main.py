@@ -3,6 +3,8 @@ from cffi import FFI
 import re
 import os
 
+#https://cffi.readthedocs.org/en/release-0.8/
+
 if 'LD_LIBRARY_PATH' not in os.environ:
 	os.environ['LD_LIBRARY_PATH'] = os.getcwd()+"/.."
 	import sys
