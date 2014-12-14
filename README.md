@@ -3,9 +3,9 @@ libretro-pan
 
 The libretro-pan project aims to ensure libretro frontends exist in all languages anyone cares about.
 
-A language is considered covered once a tool written in this language can load Super Mario World with an unmodified(*) Snes9X core, with both audio and video enabled, and any form of input, on any device.
+A language is considered covered once a tool written in this language can load Super Mario World with an unmodified(\*) Snes9X core, with both audio and video enabled, and any form of input, on any device.
 If a language is covered by an external project, libretro-pan has no interest in making another one. Our goal is their existence, not being covered by us.
-(*) Renaming the core is allowed, if the chosen FFI system demands a 'lib' prefix or similar.
+(\*) Renaming the core is allowed, if the chosen FFI system demands a 'lib' prefix or similar.
 
 | Language | Status |
 | ---- | ---- |
