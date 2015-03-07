@@ -5,6 +5,8 @@ The libretro-pan project aims to ensure libretro frontends exist in all language
 
 A language is considered covered once a tool written in this language can load Super Mario World with an unmodified(\*) Snes9X core, with both audio and video enabled, and any form of input, on any device.
 
+All dependencies are allowed, in all languages; however, all code written for libretro-pan (except build scripts) must be in the noted language.
+
 If a language is covered by an external project, libretro-pan has no interest in making another one. Our goal is their existence, not being covered by us.
 
 (\*) Renaming the core is allowed, if the chosen FFI system demands a 'lib' prefix or similar.
@@ -14,6 +16,7 @@ If a language is covered by an external project, libretro-pan has no interest in
 | C | External: [RetroArch](https://github.com/libretro/RetroArch) |
 | C++ | External: [Pantheon](https://github.com/Druage/Pantheon) |
 | Python 3 | Halted because Linux Mint 17's pygame does not support Python 3 |
+| Python 2 | Halted because pygame does not support vsync nor streaming audio (seemingly poor CFFI integration, too) |
 | Objective-C | Not started |
 | C# | Not started |
 | Visual Basic .NET | Not started |
@@ -25,7 +28,6 @@ If a language is covered by an external project, libretro-pan has no interest in
 | JavaScript | FFI capabilities being researched |
 | Ruby | FFI capabilities being researched |
 | Unix shell (any) | FFI capabilities being researched |
-| Python 2 | No interest shown yet |
 | D | No interest shown yet |
 | Dart | No interest shown yet |
 | Pascal | No interest shown yet |
