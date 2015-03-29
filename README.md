@@ -13,8 +13,8 @@ If a language is covered by an external project, libretro-pan has no interest in
 
 | Language | Status |
 | ---- | ---- |
-| C | External: [RetroArch](https://github.com/libretro/RetroArch) |
-| C++ | External: [Pantheon](https://github.com/Druage/Pantheon) |
+| C | External: Multiple; [nanoarch](https://github.com/heuripedes/nanoarch/) is the best example of how to make more |
+| C++ | External: Multiple; [Pantheon](https://github.com/Druage/Pantheon) and [minir](https://github.com/Alcaro/minir), for example |
 | Python 3 | Halted because Linux Mint 17's pygame does not support Python 3 |
 | Python 2 | Halted because pygame does not support vsync nor streaming audio (seemingly poor CFFI integration, too) |
 | Objective-C | Not started |
