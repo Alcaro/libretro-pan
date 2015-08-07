@@ -472,14 +472,16 @@ class Libretro {
 			uint id;
 		}
 		
-// typedef void (*retro_proc_address_t)(void);
-// 
-// typedef retro_proc_address_t (*retro_get_proc_address_t)(const char *sym);
+		//I have no idea how this is supposed to work. And it's never used either, so I can't test it.
+		// typedef void (*retro_proc_address_t)(void);
+		// typedef retro_proc_address_t (*retro_get_proc_address_t)(const char *sym);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		public delegate IntPtr get_proc_address_t(string sym);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct get_proc_address_interface
 		{
-// retro_get_proc_address_t get_proc_address;
+			get_proc_address_t get_proc_address;
 		}
 		
 		public enum log_level {
@@ -489,13 +491,15 @@ class Libretro {
 			ERROR
 		}
 		
-// typedef void (*retro_log_printf_t)(enum retro_log_level level,
-//       const char *fmt, ...);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		public delegate void log_printf_t(int level, string fmt,
+	            IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
+	            IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct log_callback
 		{
-//    retro_log_printf_t log;
+			public log_printf_t log;
 		}
 		
 		public enum CpuFeat {
@@ -638,10 +642,10 @@ class Libretro {
 			STRONG,
 			WEAK
 		};
-
+		
 // typedef bool (*retro_set_rumble_state_t)(unsigned port, 
 //       enum retro_rumble_effect effect, uint16_t strength);
-
+		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct rumble_interface
 		{
@@ -922,9 +926,51 @@ class Libretro {
 		raw = new Raw(dll);
 		System.Console.WriteLine(raw.api_version());
 		
-		Raw.system_info info;
-		raw.get_system_info(out info);
-		System.Console.WriteLine(info.library_name);
+		raw.set_environment(env);
+		raw.init();
+	}
+	
+	bool env(uint cmd, IntPtr data)
+	{
+		System.Console.WriteLine("Env "+cmd);
+		switch (cmd)
+		{
+			case Raw.ENVIRONMENT_GET_LOG_INTERFACE:
+			{
+				log_callback log = new log_callback();
+				log.log = log_cb;
+				Marshal.StructureToPtr(log, data, false);
+				return true;
+			}
+			default:
+				return false;
+		}
+	}
+	
+	[DllImport("msvcrt.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+	private static extern int _snprintf([MarshalAs(UnmanagedType.LPStr)] System.Text.StringBuilder str, IntPtr length, String format,
+	                                    IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
+	                                    IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
+	
+	void log_cb(int level, string fmt,
+	            IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
+	            IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8)
+	{
+		System.Text.StringBuilder sb = new System.Text.StringBuilder(256);
+		while (true) {
+			int len = _snprintf(sb, new IntPtr(sb.Capacity), fmt, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+			//shitty _snprintf, returning negative values on overflow instead of the length like the real snprintf
+			if (len <= 0 || len >= sb.Capacity)
+			{
+				sb.Capacity *= 2;
+				continue;
+			}
+			sb.Length = len;
+			break;
+		} while (sb.Length >= sb.Capacity);
+		
+		//TODO: forward outwards
+		System.Console.WriteLine("Log: "+sb);
 	}
 }
 
@@ -932,7 +978,8 @@ class TinyGUI
 {
 	static void Main()
 	{
-		Libretro core = new Libretro("snes9x_libretro.dll");
+		//Libretro core = new Libretro("snes9x_libretro.dll");
+		Libretro core = new Libretro("minir_testcore_libretro.dll");
 		
 		
 	}
