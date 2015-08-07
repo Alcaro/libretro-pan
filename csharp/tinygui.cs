@@ -12,20 +12,16 @@ class TinyGUI
 {
 	Libretro.pixel_format pixfmt;
 	
-	Bitmap bmp;
-	System.Drawing.Imaging.PixelFormat[] bmp_formats = {
-		System.Drawing.Imaging.PixelFormat.Format16bppRgb555, // ew, too long.
-		System.Drawing.Imaging.PixelFormat.Format32bppRgb,
-		System.Drawing.Imaging.PixelFormat.Format16bppRgb565
-	};
+	TinyDDraw draw;
 	
 	TinyGUI()
 	{
 		Libretro core = new Libretro("snes9x_libretro.dll");
 		//Libretro core = new Libretro("minir_testcore_libretro.dll");
+		
 		core.log_cb = log;
-		unsafe { core.video_cb = video; } // why is that needed, it's declared unsafe on both sides
-		unsafe { core.audio_batch_cb = audio; }
+		core.video_cb = video;
+		core.audio_batch_cb = audio;
 		core.input_state_cb = input;
 		core.init();
 		
@@ -38,34 +34,20 @@ class TinyGUI
 		System.Console.WriteLine(av.geometry.base_height);
 		
 		Form form = new Form();
-		PictureBox pic = new PictureBox();
-		bmp = new Bitmap((int)av.geometry.base_width, (int)av.geometry.base_height, bmp_formats[(int)av.pixfmt]);
-		pic.Image = bmp;
-		form.Controls.Add(pic);
+		form.Size = new Size((int)av.geometry.base_width, (int)av.geometry.base_height);
+		draw = new TinyDDraw(form);
 		form.Show();
 		
-		for (int i=0;i<1200;i++) core.run();
-	}
-	
-	[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-	public static extern IntPtr memcpy(IntPtr dest, IntPtr src, UIntPtr count);
-	
-	void video_copy(IntPtr dst, uint dstpitch, IntPtr src, uint srcpitch, uint rowlen, uint height)
-	{
-		ulong dst_i = (ulong)dst.ToInt64();
-		ulong src_i = (ulong)src.ToInt64();
-		for (uint i=0;i<height;i++)
+		for (int i=0;i<60;i++)
 		{
-			memcpy(new IntPtr((long)(dst_i + dstpitch*i)), new IntPtr((long)(src_i + srcpitch*i)), new UIntPtr(rowlen));
+			core.run();
+			Application.DoEvents();
 		}
 	}
 	
 	void video(IntPtr data, uint width, uint height, uint pitch)
 	{
-		BitmapData bmpdat = bmp.LockBits(new Rectangle(0, 0, (int)width, (int)height), ImageLockMode.WriteOnly, bmp_formats[(int)pixfmt]);
-		video_copy(bmpdat.Scan0, (uint)bmpdat.Stride, data, pitch, (pixfmt == Libretro.pixel_format.XRGB8888 ? 4u : 2u) * width, height);
-		bmp.UnlockBits(bmpdat);
-		this.Invalidate();
+		draw.video(data, width, height, pitch);
 	}
 	
 	void audio(IntPtr data, ulong frames)
@@ -86,5 +68,61 @@ class TinyGUI
 	static void Main()
 	{
 		new TinyGUI();
+	}
+}
+
+class TinyDDraw
+{
+	Device dev;
+	Surface surf_front;
+	Surface surf_back;
+	
+	public TinyDDraw(Form parent)
+	{
+		dev = new Device();
+		dev.SetCooperativeLevel(parent, CooperativeLevelFlags.Normal);
+		
+		SurfaceDescription desc = new SurfaceDescription();
+		desc.SurfaceCaps.PrimarySurface = true;
+		surf_front = new Surface(desc, dev);
+		
+		desc.Clear();
+		desc.Width = surf_front.SurfaceDescription.Width;
+		desc.Height = surf_front.SurfaceDescription.Height;
+System.Console.WriteLine("XXY");
+System.Console.WriteLine(desc.Width);
+System.Console.WriteLine(desc.Height);
+		desc.SurfaceCaps.OffScreenPlain = true;
+
+System.Console.WriteLine("A");
+		surf_back = new Surface(desc, dev);
+System.Console.WriteLine("b");
+		
+		Clipper clip = new Clipper(dev);
+System.Console.WriteLine("c");
+		clip.Window = parent;
+System.Console.WriteLine("d");
+		surf_front.Clipper = clip;
+System.Console.WriteLine("e");
+	}
+	
+	[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+	public static extern IntPtr memcpy(IntPtr dest, IntPtr src, UIntPtr count);
+	
+	void video_copy(IntPtr dst, uint dstpitch, IntPtr src, uint srcpitch, uint rowlen, uint height)
+	{
+		ulong dst_i = (ulong)dst.ToInt64();
+		ulong src_i = (ulong)src.ToInt64();
+		for (uint i=0;i<height;i++)
+		{
+			memcpy(new IntPtr((long)(dst_i + dstpitch*i)), new IntPtr((long)(src_i + srcpitch*i)), new UIntPtr(rowlen));
+		}
+	}
+	
+	public void video(IntPtr data, uint width, uint height, uint pitch)
+	{
+		//BitmapData bmpdat = bmp.LockBits(new Rectangle(0, 0, (int)width, (int)height), ImageLockMode.WriteOnly, bmp_formats[(int)pixfmt]);
+		//video_copy(bmpdat.Scan0, (uint)bmpdat.Stride, data, pitch, (pixfmt == Libretro.pixel_format.XRGB8888 ? 4u : 2u) * width, height);
+		//bmp.UnlockBits(bmpdat);
 	}
 }
