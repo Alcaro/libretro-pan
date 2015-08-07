@@ -57,13 +57,14 @@ class Libretro {
 			get_memory_data = (get_memory_data_t)LoadFromDLL("retro_get_memory_data", typeof(get_memory_data_t));
 			get_memory_size = (get_memory_size_t)LoadFromDLL("retro_get_memory_size", typeof(get_memory_size_t));
 			
-			if (api_version() != ApiVersion)
+			if (api_version() != API_VERSION)
 			{
 				throw new ArgumentException("The given DLL uses wrong version of libretro", "dll");
 			}
 		}
 		
-		public const uint ApiVersion = 1;
+		public const uint API_VERSION = 1;
+		
 		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		public struct memory_descriptor
@@ -84,25 +85,11 @@ class Libretro {
 			public uint num_descriptors;
 		}
 		
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		public struct controller_description
-		{
-			public string desc;
-			public uint id;
-		}
-		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct controller_info
 		{
 			public IntPtr types; // controller_description[]
 			public uint num_types;
-		}
-		
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		public struct subsystem_memory_info
-		{
-			public string extension;
-			public uint type;
 		}
 		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -127,24 +114,12 @@ class Libretro {
 			uint id;
 		}
 		
-		//I have no idea how this is supposed to work. And it's never used either, so I can't test it.
-		// typedef void (*retro_proc_address_t)(void);
-		// typedef retro_proc_address_t (*retro_get_proc_address_t)(const char *sym);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		public delegate IntPtr get_proc_address_t(string sym);
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct get_proc_address_interface
-		{
-			get_proc_address_t get_proc_address;
-		}
-		
-		//disgusting stuff. since C# doesn't support varargs, I assume it's not
+		//disgusting stuff. since C# doesn't support varargs, I'll assume it's not
 		// called with more than 8 arguments and forward all eight to sprintf.
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		public delegate void log_printf_t(int level, IntPtr fmt,
-	            IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
-	            IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
+		                    IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
+		                    IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct log_callback
@@ -152,214 +127,9 @@ class Libretro {
 			public log_printf_t log;
 		}
 		
-		// typedef uint64_t retro_perf_tick_t;
-		// typedef int64_t retro_time_t;
-		
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		public struct perf_counter
-		{
-			public string ident;
-			public ulong start;
-			public ulong total;
-			public ulong call_cnt;
-			[MarshalAs(UnmanagedType.U1)] public bool registered;
-		}
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate long perf_get_time_usec_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate ulong perf_get_counter_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate ulong get_cpu_features_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void perf_log_t();
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void perf_register_t(out perf_counter counter);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void perf_start_t(out perf_counter counter);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void perf_stop_t(out perf_counter counter);
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct perf_callback
-		{
-			perf_get_time_usec_t    get_time_usec;
-			get_cpu_features_t      get_cpu_features;
-			
-			perf_get_counter_t      get_perf_counter;
-			perf_register_t         perf_register;
-			perf_start_t            perf_start;
-			perf_stop_t             perf_stop;
-			perf_log_t              perf_log;
-		}
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool set_sensor_state_t(uint port, sensor_action action, uint rate);
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate float sensor_get_input_t(uint port, uint rate);
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct sensor_interface
-		{
-			set_sensor_state_t set_sensor_state;
-			sensor_get_input_t get_sensor_input;
-		}
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool camera_start_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool camera_stop_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void camera_lifetime_status_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void camera_frame_raw_framebuffer_t(IntPtr buffer, uint width, uint height, UIntPtr pitch);
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void camera_frame_opengl_texture_t(uint width, uint height, IntPtr affine);
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct camera_callback
-		{
-			public ulong caps;
-			public uint width;
-			public uint height;
-			camera_start_t start;
-			camera_stop_t stop;
-			camera_frame_raw_framebuffer_t frame_raw_framebuffer;
-			camera_frame_opengl_texture_t frame_opengl_texture;
-			camera_lifetime_status_t initialized;
-			camera_lifetime_status_t deinitialized;
-		}
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void location_set_interval_t(uint interval_ms, uint interval_distance);
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool location_start_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void location_stop_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool location_get_position_t(out double lat, out double lon, out double horiz_accuracy, out double vert_accuracy);
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void location_lifetime_status_t();
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct location_callback
-		{
-			public location_start_t         start;
-			public location_stop_t          stop;
-			public location_get_position_t  get_position;
-			public location_set_interval_t  set_interval;
-			
-			public location_lifetime_status_t initialized;
-			public location_lifetime_status_t deinitialized;
-		}
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool set_rumble_state_t(uint port, int effect, ushort strength);
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct rumble_interface
-		{
-			public set_rumble_state_t set_rumble_state;
-		}
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void audio_callback_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void audio_set_state_callback_t([MarshalAs(UnmanagedType.U1)] bool enabled);
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct audio_callback
-		{
-			public audio_callback_t callback;
-			public audio_set_state_callback_t set_state;
-		}
-		
-		// typedef int64_t retro_usec_t;
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void frame_time_callback_t(long usec);
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct frame_time_callback
-		{
-			frame_time_callback_t callback;
-			public long reference;
-		}
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void hw_context_reset_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate UIntPtr hw_get_current_framebuffer_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		public delegate IntPtr hw_get_proc_address_t(string sym);
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct hw_render_callback
-		{
-			int context_type;
-			public hw_context_reset_t context_reset;
-			public hw_get_current_framebuffer_t get_current_framebuffer;
-			public hw_get_proc_address_t get_proc_address;
-			[MarshalAs(UnmanagedType.U1)] public bool depth;
-			[MarshalAs(UnmanagedType.U1)] public bool stencil;
-			[MarshalAs(UnmanagedType.U1)] public bool bottom_left_origin;
-			uint version_major;
-			uint version_minor;
-			[MarshalAs(UnmanagedType.U1)] public bool cache_context;
-			public hw_context_reset_t context_destroy;
-			[MarshalAs(UnmanagedType.U1)] public bool debug_context;
-		}
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void keyboard_event_t([MarshalAs(UnmanagedType.U1)] bool down, uint keycode, uint character, ushort key_modifier);
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct keyboard_callback
-		{
-			public keyboard_event_t callback;
-		}
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool set_eject_state_t([MarshalAs(UnmanagedType.U1)] bool ejected);
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool get_eject_state_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate uint get_image_index_t();
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void set_image_index_t(uint index);
-		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
 		public delegate bool replace_image_index_t(uint index, IntPtr info);//retro_game_info
-		
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool add_image_index_t();
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct disk_control_callback
@@ -375,58 +145,10 @@ class Libretro {
 			public add_image_index_t add_image_index;
 		}
 		
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		public struct message
-		{
-			public string msg;
-			public uint frames;
-		}
-		
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		public struct input_descriptor
-		{
-			public uint port;
-			public uint device;
-			public uint index;
-			public uint id;
-			public string description;
-		}
-		
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		public struct system_info {
-			public string library_name;
-			public string library_version;
-			public string valid_extensions;
-			[MarshalAs(UnmanagedType.U1)] public bool need_fullpath;
-			[MarshalAs(UnmanagedType.U1)] public bool block_extract;
-		};
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct game_geometry {
-			public uint base_width;
-			public uint base_height;
-			public uint max_width;
-			public uint max_height;
-			
-			public float aspect_ratio;
-		};
-		
-		[StructLayout(LayoutKind.Sequential)]
-		public struct system_timing {
-			public double fps;
-			public double sample_rate;
-		};
-		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct system_av_info {
 			public IntPtr geometry;//game_geometry*
 			public IntPtr timing;//system_timing*
-		};
-		
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		public struct variable {
-			public string key;
-			public string value;
 		};
 		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -858,6 +580,64 @@ class Libretro {
 		Minsize8  = (3 << 24)
 	}
 	
+	unsafe public struct memory_descriptor
+	{
+		public ulong flags;
+		public byte* ptr;
+		public ulong offset;
+		public ulong start;
+		public ulong select;
+		public ulong disconnect;
+		public ulong len;
+		public string addrspace;
+	};
+	
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	public struct controller_description
+	{
+		public string desc;
+		public uint id;
+	}
+	
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	public struct subsystem_memory_info
+	{
+		public string extension;
+		public uint type;
+	}
+	
+	public struct subsystem_rom_info
+	{
+		public string desc;
+		public string valid_extensions;
+		[MarshalAs(UnmanagedType.U1)] public bool need_fullpath;
+		[MarshalAs(UnmanagedType.U1)] public bool block_extract;
+		[MarshalAs(UnmanagedType.U1)] public bool required;
+		public subsystem_memory_info[] memory;
+		public uint num_memory;
+	};
+	
+	public struct subsystem_info
+	{
+		public string desc;
+		public string ident;
+		public subsystem_rom_info[] roms;
+		public uint num_roms;
+		public uint id;
+	}
+	
+	//I have no idea how this is supposed to work. And it's never used either, so I can't test it.
+	// typedef void (*retro_proc_address_t)(void);
+	// typedef retro_proc_address_t (*retro_get_proc_address_t)(const char *sym);
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+	public delegate IntPtr get_proc_address_t(string sym);
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct get_proc_address_interface
+	{
+		get_proc_address_t get_proc_address;
+	}
+	
 	public enum LogLevel {
 		Debug,
 		Info,
@@ -884,6 +664,50 @@ class Libretro {
 		SimdAES    = (1 << 15)
 	}
 	
+	// typedef uint64_t retro_perf_tick_t;
+	// typedef int64_t retro_time_t;
+	
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	public struct perf_counter
+	{
+		public string ident;
+		public ulong start;
+		public ulong total;
+		public ulong call_cnt;
+		[MarshalAs(UnmanagedType.U1)] public bool registered;
+	}
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate long perf_get_time_usec_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate ulong perf_get_counter_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate ulong get_cpu_features_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void perf_log_t();
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void perf_register_t(out perf_counter counter);
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void perf_start_t(out perf_counter counter);
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void perf_stop_t(out perf_counter counter);
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct perf_callback
+	{
+		perf_get_time_usec_t    get_time_usec;
+		get_cpu_features_t      get_cpu_features;
+		
+		perf_get_counter_t      get_perf_counter;
+		perf_register_t         perf_register;
+		perf_start_t            perf_start;
+		perf_stop_t             perf_stop;
+		perf_log_t              perf_log;
+	}
+	
 	public enum sensor_action {
 		AccelerometerEnable,
 		AccelerometerDisable
@@ -895,10 +719,84 @@ class Libretro {
 		AccelerometerZ
 	}
 	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.U1)]
+	public delegate bool set_sensor_state_t(uint port, sensor_action action, uint rate);
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate float sensor_get_input_t(uint port, uint rate);
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct sensor_interface
+	{
+		set_sensor_state_t set_sensor_state;
+		sensor_get_input_t get_sensor_input;
+	}
+	
 	public enum camera_buffer
 	{
 		OpenGLTexture,
 		RawFramebuffer
+	}
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.U1)]
+	public delegate bool camera_start_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.U1)]
+	public delegate bool camera_stop_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void camera_lifetime_status_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void camera_frame_raw_framebuffer_t(IntPtr buffer, uint width, uint height, UIntPtr pitch);
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void camera_frame_opengl_texture_t(uint width, uint height, IntPtr affine);
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct camera_callback
+	{
+		public ulong caps;
+		public uint width;
+		public uint height;
+		camera_start_t start;
+		camera_stop_t stop;
+		camera_frame_raw_framebuffer_t frame_raw_framebuffer;
+		camera_frame_opengl_texture_t frame_opengl_texture;
+		camera_lifetime_status_t initialized;
+		camera_lifetime_status_t deinitialized;
+	}
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void location_set_interval_t(uint interval_ms, uint interval_distance);
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.U1)]
+	public delegate bool location_start_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void location_stop_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.U1)]
+	public delegate bool location_get_position_t(out double lat, out double lon, out double horiz_accuracy, out double vert_accuracy);
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void location_lifetime_status_t();
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct location_callback
+	{
+		public location_start_t         start;
+		public location_stop_t          stop;
+		public location_get_position_t  get_position;
+		public location_set_interval_t  set_interval;
+		
+		public location_lifetime_status_t initialized;
+		public location_lifetime_status_t deinitialized;
 	}
 	
 	public enum rumble_effect
@@ -907,7 +805,50 @@ class Libretro {
 		Weak
 	};
 	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.U1)]
+	public delegate bool set_rumble_state_t(uint port, int effect, ushort strength);
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct rumble_interface
+	{
+		public set_rumble_state_t set_rumble_state;
+	}
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void audio_callback_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void audio_set_state_callback_t([MarshalAs(UnmanagedType.U1)] bool enabled);
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct audio_callback
+	{
+		public audio_callback_t callback;
+		public audio_set_state_callback_t set_state;
+	}
+	
+	// typedef int64_t retro_usec_t;
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void frame_time_callback_t(long usec);
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct frame_time_callback
+	{
+		frame_time_callback_t callback;
+		public long reference;
+	}
+	
 	public const long HWFrameBufferValid = -1;
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void hw_context_reset_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate UIntPtr hw_get_current_framebuffer_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+	public delegate IntPtr hw_get_proc_address_t(string sym);
 	
 	public enum hw_context_type
 	{
@@ -919,76 +860,191 @@ class Libretro {
 		OpenGLESVersion
 	}
 	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct hw_render_callback
+	{
+		int context_type;
+		public hw_context_reset_t context_reset;
+		public hw_get_current_framebuffer_t get_current_framebuffer;
+		public hw_get_proc_address_t get_proc_address;
+		[MarshalAs(UnmanagedType.U1)] public bool depth;
+		[MarshalAs(UnmanagedType.U1)] public bool stencil;
+		[MarshalAs(UnmanagedType.U1)] public bool bottom_left_origin;
+		uint version_major;
+		uint version_minor;
+		[MarshalAs(UnmanagedType.U1)] public bool cache_context;
+		public hw_context_reset_t context_destroy;
+		[MarshalAs(UnmanagedType.U1)] public bool debug_context;
+	}
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void keyboard_event_t([MarshalAs(UnmanagedType.U1)] bool down, uint keycode, uint character, ushort key_modifier);
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct keyboard_callback
+	{
+		public keyboard_event_t callback;
+	}
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.U1)]
+	public delegate bool set_eject_state_t([MarshalAs(UnmanagedType.U1)] bool ejected);
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.U1)]
+	public delegate bool get_eject_state_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate uint get_image_index_t();
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate void set_image_index_t(uint index);
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	public delegate uint get_num_images_t();
+	
+	public delegate bool replace_image_index_t(uint index, game_info info);
+	
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.U1)]
+	public delegate bool add_image_index_t();
+	
+	public struct disk_control_callback
+	{
+		public set_eject_state_t set_eject_state;
+		public get_eject_state_t get_eject_state;
+		
+		public get_image_index_t get_image_index;
+		public set_image_index_t set_image_index;
+		public get_num_images_t  get_num_images;
+		
+		public replace_image_index_t replace_image_index;
+		public add_image_index_t add_image_index;
+	}
+	
 	public enum pixel_format {
 		XRGB1555,
 		XRGB8888,
 		RGB565
 	}
 	
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	public struct message
+	{
+		public string msg;
+		public uint frames;
+	}
+	
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	public struct input_descriptor
+	{
+		public uint port;
+		public uint device;
+		public uint index;
+		public uint id;
+		public string description;
+	}
+	
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	public struct system_info {
+		public string library_name;
+		public string library_version;
+		public string valid_extensions;
+		[MarshalAs(UnmanagedType.U1)] public bool need_fullpath;
+		[MarshalAs(UnmanagedType.U1)] public bool block_extract;
+	};
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct game_geometry {
+		public uint base_width;
+		public uint base_height;
+		public uint max_width;
+		public uint max_height;
+		
+		public float aspect_ratio;
+	};
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct system_timing {
+		public double fps;
+		public double sample_rate;
+	};
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct system_av_info {
+		public game_geometry geometry;
+		public system_timing timing;
+	};
+	
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+	public struct variable {
+		public string key;
+		public string value;
+	};
+	
+	public unsafe struct game_info {
+		public string path;
+		public byte* data;
+		public ulong size;
+		public string meta;
+	};
+	
 	
 	
 	Raw raw;
 	
-	public Libretro(string dll, log_cb_t log)
+	public Libretro(string dll)
 	{
 		raw = new Raw(dll);
-		log_cb = log;
 	}
 	
-	public void init()
-	{
-		raw.set_environment(env);
-		raw.init();
-	}
-	
-	bool env(uint cmd, IntPtr data)
+	bool i_env(uint cmd, IntPtr data)
 	{
 		System.Console.WriteLine("Env "+cmd);
 		switch ((Environment)cmd)
 		{
-// #define RETRO_ENVIRONMENT_SET_ROTATION  1  /* const unsigned * --
-// #define RETRO_ENVIRONMENT_GET_OVERSCAN  2  /* bool * --
-// #define RETRO_ENVIRONMENT_GET_CAN_DUPE  3  /* bool * --
-// #define RETRO_ENVIRONMENT_SET_MESSAGE   6  /* const struct retro_message * --
-// #define RETRO_ENVIRONMENT_SHUTDOWN      7  /* N/A (NULL) --
-// #define RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL 8 /* const unsigned * --
-// #define RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY 9 /* const char ** --
-// #define RETRO_ENVIRONMENT_SET_PIXEL_FORMAT 10 /* const enum retro_pixel_format * --
-// #define RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS 11 /* const struct retro_input_descriptor * --
-// #define RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK 12 /* const struct retro_keyboard_callback * --
-// #define RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE 13 /* const struct retro_disk_control_callback * --
-// #define RETRO_ENVIRONMENT_SET_HW_RENDER 14 /* struct retro_hw_render_callback * --
-// #define RETRO_ENVIRONMENT_GET_VARIABLE 15 /* struct retro_variable * --
-// #define RETRO_ENVIRONMENT_SET_VARIABLES 16 /* const struct retro_variable * --
-// #define RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE 17 /* bool * --
-// #define RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME 18 /* const bool * --
-// #define RETRO_ENVIRONMENT_GET_LIBRETRO_PATH 19 /* const char ** --
-// #define RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK 22 /* const struct retro_audio_callback * --
-// #define RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK 21 /* const struct retro_frame_time_callback * --
-// #define RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE 23 /* struct retro_rumble_interface * --
-// #define RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES 24 /* uint64_t * --
-// #define RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE 25 /* struct retro_sensor_interface * --
-// #define RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE 26 /* struct retro_camera_callback * --
-// #define RETRO_ENVIRONMENT_GET_LOG_INTERFACE 27 /* struct retro_log_callback * --
-// #define RETRO_ENVIRONMENT_GET_PERF_INTERFACE 28 /* struct retro_perf_callback * --
-// #define RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE 29 /* struct retro_location_callback * --
-// #define RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY 30 /* const char ** --
-// #define RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY 31 /* const char ** --
-// #define RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO 32 /* const struct retro_system_av_info * --
-// #define RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK 33 /* const struct retro_get_proc_address_interface * --
-// #define RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO 34 /* const struct retro_subsystem_info * --
-// #define RETRO_ENVIRONMENT_SET_CONTROLLER_INFO 35 /* const struct retro_controller_info * --
-// #define RETRO_ENVIRONMENT_SET_MEMORY_MAPS 36 /* const struct retro_memory_map * --
-// #define RETRO_ENVIRONMENT_SET_GEOMETRY 37 /* const struct retro_game_geometry * --
-// #define RETRO_ENVIRONMENT_GET_USERNAME 38  /* const char **
-// #define RETRO_ENVIRONMENT_GET_LANGUAGE 39 /* unsigned * --
-			case Environment.GetLogInterface:
+			//case Environment.SetRotation: // const unsigned *
+			//case Environment.GetOverscan: // bool *
+			//case Environment.GetCanDupe: // bool *
+			//case Environment.SetMessage: // const struct retro_message *
+			//case Environment.Shutdown: // N/A (NULL)
+			//case Environment.SetPerformanceLevel: // const unsigned *
+			//case Environment.GetSystemDirectory: // const char **
+			//case Environment.SetPixelFormat: // const enum retro_pixel_format *
+			//case Environment.SetInputDescriptors: // const struct retro_input_descriptor *
+			//case Environment.SetKeyboardCallback: // const struct retro_keyboard_callback *
+			//case Environment.SetDiskControlInterface: // const struct retro_disk_control_callback *
+			//case Environment.SetHWRender: // struct retro_hw_render_callback *
+			//case Environment.GetVariable: // struct retro_variable *
+			//case Environment.SetVariables: // const struct retro_variable *
+			//case Environment.GetVariableUpdate: // bool *
+			//case Environment.SetSupportNoGame: // const bool *
+			//case Environment.GetLibretroPath: // const char **
+			//case Environment.SetAudioCallback: // const struct retro_audio_callback *
+			//case Environment.SetFrameTimeCallback: // const struct retro_frame_time_callback *
+			//case Environment.GetRumbleInterface: // struct retro_rumble_interface *
+			//case Environment.GetInputDeviceCapabilities: // uint64_t *
+			//case Environment.GetSensorInterface: // struct retro_sensor_interface *
+			//case Environment.GetCameraInterface: // struct retro_camera_callback *
+			case Environment.GetLogInterface: // struct retro_log_callback *
 			{
 				Raw.log_callback log = new Raw.log_callback();
 				log.log = log_printf_cb;
 				Marshal.StructureToPtr(log, data, false);
 				return true;
 			}
+			//case Environment.GetPerfInterface: // struct retro_perf_callback *
+			//case Environment.GetLocationInterface: // struct retro_location_callback *
+			//case Environment.GetContentDirectory: // const char **
+			//case Environment.GetSaveDirectory: // const char **
+			//case Environment.SetSystemAVInfo: // const struct retro_system_av_info *
+			//case Environment.SetProcAddressCallback: // const struct retro_get_proc_address_interface *
+			//case Environment.SetSubsystemInfo: // const struct retro_subsystem_info *
+			//case Environment.SetControllerInfo: // const struct retro_controller_info *
+			//case Environment.SetMemoryMaps: // const struct retro_memory_map *
+			//case Environment.SetGeometry: // const struct retro_game_geometry *
+			//case Environment.GetUsername: // const char **
+			//case Environment.GetLanguage: // unsigned *
 			default:
 				return false;
 		}
@@ -1006,7 +1062,7 @@ class Libretro {
 		if (log_cb == null) return;
 		
 		System.Text.StringBuilder sb = new System.Text.StringBuilder(256);
-		while (true) {
+		while (true) { // somewhat weird, but that's the best I could do without duplicating anything
 			int len = _snprintf(sb, new IntPtr(sb.Capacity), fmt, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 			//stupid _snprintf, returning negative values on overflow instead of the length. do it properly.
 			if (len <= 0 || len >= sb.Capacity)
@@ -1022,15 +1078,116 @@ class Libretro {
 	}
 	
 	public delegate void log_cb_t(LogLevel level, string text);
-	log_cb_t log_cb;
+	public log_cb_t log_cb;
+	
+	public unsafe delegate void video_cb_t(void* data, uint width, uint height, ulong pitch);
+	public video_cb_t video_cb;
+	
+	public delegate void audio_cb_t(short left, short right);
+	public audio_cb_t audio_cb;
+	
+	public unsafe delegate void audio_batch_cb_t(short* data, ulong frames);
+	public audio_batch_cb_t audio_batch_cb;
+	
+	public delegate void input_poll_cb_t();
+	public input_poll_cb_t input_poll_cb;
+	
+	public delegate short input_state_cb_t(uint port, uint device, uint index, uint id);
+	public input_state_cb_t input_state_cb;
+	
+	public void init()
+	{
+		raw.set_environment(i_env);
+		//raw.set_video();
+		//raw.set_audio();
+		//raw.set_audio_batch();
+		//raw.set_input_poll();
+		//raw.set_input_state();
+		raw.init();
+	}
+	
+	public void deinit()
+	{
+		raw.deinit();
+	}
+	
+	public system_info get_system_info()
+	{
+		system_info info = new system_info();
+		raw.get_system_info(out info);
+		return info;
+	}
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void get_system_info_t(out system_info info);
+		//public get_system_info_t get_system_info;
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void get_system_av_info_t(out system_av_info info);
+		//public get_system_av_info_t get_system_av_info;
+		//
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void set_controller_port_device_t(uint port, uint device);
+		//public set_controller_port_device_t set_controller_port_device;
+		//
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void reset_t();
+		//public reset_t reset;
+		//
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void run_t();
+		//public run_t run;
+		//
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate UIntPtr serialize_size_t();
+		//public serialize_size_t serialize_size;
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//[return: MarshalAs(UnmanagedType.U1)]
+		//public delegate bool serialize_t(IntPtr data, UIntPtr size);//uint8_t[]
+		//public serialize_t serialize;
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//[return: MarshalAs(UnmanagedType.U1)]
+		//public delegate bool unserialize_t(IntPtr data, UIntPtr size);//uint8_t[]
+		//public unserialize_t unserialize;
+		//
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void cheat_reset_t();
+		//public cheat_reset_t cheat_reset;
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		//public delegate void cheat_set_t(uint index, [MarshalAs(UnmanagedType.U1)] bool enabled, string code);
+		//public cheat_set_t cheat_set;
+		//
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//[return: MarshalAs(UnmanagedType.U1)]
+		//public delegate bool load_game_t(out game_info game);
+		//public load_game_t load_game;
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//[return: MarshalAs(UnmanagedType.U1)]
+		//public delegate bool load_game_special_t(uint game_type, IntPtr info, UIntPtr num_info);//retro_game_info[]
+		//public load_game_special_t load_game_special;
+		//
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void unload_game_t(out system_info info);
+		//public unload_game_t unload_game;
+		//
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate uint get_region_t();
+		//public get_region_t get_region;
+		//
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate IntPtr get_memory_data_t(uint id);
+		//public get_memory_data_t get_memory_data;
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate UIntPtr get_memory_size_t(uint id);
+		//public get_memory_size_t get_memory_size;
+		
 }
 
 class TinyGUI
 {
 	static void Main()
 	{
-		//Libretro core = new Libretro("snes9x_libretro.dll", log);
-		Libretro core = new Libretro("minir_testcore_libretro.dll", log);
+		//Libretro core = new Libretro("snes9x_libretro.dll");
+		Libretro core = new Libretro("minir_testcore_libretro.dll");
+		core.log_cb = log;
 		core.init();
 	}
 	
