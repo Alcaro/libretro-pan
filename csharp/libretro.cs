@@ -116,7 +116,7 @@ class Libretro {
 			public IntPtr memory; // subsystem_memory_info[]
 			uint num_memory;
 		};
-
+		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		public struct subsystem_info
 		{
@@ -141,8 +141,8 @@ class Libretro {
 		
 		//disgusting stuff. since C# doesn't support varargs, I assume it's not
 		// called with more than 8 arguments and forward all eight to sprintf.
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		public delegate void log_printf_t(int level, string fmt,
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void log_printf_t(int level, IntPtr fmt,
 	            IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
 	            IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
 		
@@ -978,15 +978,15 @@ class Libretro {
 	}
 	
 	[DllImport("msvcrt.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-	private static extern int _snprintf([MarshalAs(UnmanagedType.LPStr)] System.Text.StringBuilder str, IntPtr length, String format,
+	private static extern int _snprintf([MarshalAs(UnmanagedType.LPStr)] System.Text.StringBuilder str, IntPtr length, IntPtr format,
 	                                    IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
 	                                    IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
 	
-	void log_printf_cb(int level, string fmt,
+	void log_printf_cb(int level, IntPtr fmt,
 	            IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
 	            IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8)
 	{
-		if (log_cb==null) return;
+		if (log_cb == null) return;
 		
 		System.Text.StringBuilder sb = new System.Text.StringBuilder(256);
 		while (true) {
