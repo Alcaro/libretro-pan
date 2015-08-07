@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 class Libretro {
 	class Raw
 	{
+		//This is a very low-level class. It uses the C structures as much as possible, and is quite ugly to work with.
+		
 		static class Kernel32
 		{
 			[DllImport("kernel32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
@@ -61,13 +63,13 @@ class Libretro {
 			}
 		}
 		
-		public const int API_VERSION = 1;
+		public const uint API_VERSION = 1;
 		
-		public const int DEVICE_TYPE_SHIFT = 8;
-		public const int DEVICE_MASK = ((1 << DEVICE_TYPE_SHIFT) - 1);
-		public static int DEVICE_SUBCLASS(int base_, int id)
+		public const uint DEVICE_TYPE_SHIFT = 8;
+		public const uint DEVICE_MASK = ((1 << (int)DEVICE_TYPE_SHIFT) - 1);
+		public static uint DEVICE_SUBCLASS(uint base_, uint id)
 		{
-			return (((id + 1) << DEVICE_TYPE_SHIFT) | base_);
+			return (((id + 1) << (int)DEVICE_TYPE_SHIFT) | base_);
 		}
 		
 		public enum Device {
@@ -327,42 +329,44 @@ class Libretro {
 		public const int ENVIRONMENT_EXPERIMENTAL = 0x10000;
 		public const int ENVIRONMENT_PRIVATE = 0x20000;
 		
-		public const int ENVIRONMENT_SET_ROTATION = 1;
-		public const int ENVIRONMENT_GET_OVERSCAN = 2;
-		public const int ENVIRONMENT_GET_CAN_DUPE = 3;
-		public const int ENVIRONMENT_SET_MESSAGE  = 6;
-		public const int ENVIRONMENT_SHUTDOWN     = 7;
-		public const int ENVIRONMENT_SET_PERFORMANCE_LEVEL = 8;
-		public const int ENVIRONMENT_GET_SYSTEM_DIRECTORY = 9;
-		public const int ENVIRONMENT_SET_PIXEL_FORMAT = 10;
-		public const int ENVIRONMENT_SET_INPUT_DESCRIPTORS = 11;
-		public const int ENVIRONMENT_SET_KEYBOARD_CALLBACK = 12;
-		public const int ENVIRONMENT_SET_DISK_CONTROL_INTERFACE = 13;
-		public const int ENVIRONMENT_SET_HW_RENDER = 14;
-		public const int ENVIRONMENT_GET_VARIABLE = 15;
-		public const int ENVIRONMENT_SET_VARIABLES = 16;
-		public const int ENVIRONMENT_GET_VARIABLE_UPDATE = 17;
-		public const int ENVIRONMENT_SET_SUPPORT_NO_GAME = 18;
-		public const int ENVIRONMENT_GET_LIBRETRO_PATH = 19;
-		public const int ENVIRONMENT_SET_AUDIO_CALLBACK = 22;
-		public const int ENVIRONMENT_SET_FRAME_TIME_CALLBACK = 21;
-		public const int ENVIRONMENT_GET_RUMBLE_INTERFACE = 23;
-		public const int ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES = 24;
-		public const int ENVIRONMENT_GET_SENSOR_INTERFACE = (25 | ENVIRONMENT_EXPERIMENTAL);
-		public const int ENVIRONMENT_GET_CAMERA_INTERFACE = (26 | ENVIRONMENT_EXPERIMENTAL);
-		public const int ENVIRONMENT_GET_LOG_INTERFACE = 27;
-		public const int ENVIRONMENT_GET_PERF_INTERFACE = 28;
-		public const int ENVIRONMENT_GET_LOCATION_INTERFACE = 29;
-		public const int ENVIRONMENT_GET_CONTENT_DIRECTORY = 30;
-		public const int ENVIRONMENT_GET_SAVE_DIRECTORY = 31;
-		public const int ENVIRONMENT_SET_SYSTEM_AV_INFO = 32;
-		public const int ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK = 33;
-		public const int ENVIRONMENT_SET_SUBSYSTEM_INFO = 34;
-		public const int ENVIRONMENT_SET_CONTROLLER_INFO = 35;
-		public const int ENVIRONMENT_SET_MEMORY_MAPS = (36 | ENVIRONMENT_EXPERIMENTAL);
-		public const int ENVIRONMENT_SET_GEOMETRY = 37;
-		public const int ENVIRONMENT_GET_USERNAME = 38;
-		public const int ENVIRONMENT_GET_LANGUAGE = 39;
+		public enum Environment {
+			SET_ROTATION = 1,
+			GET_OVERSCAN = 2,
+			GET_CAN_DUPE = 3,
+			SET_MESSAGE  = 6,
+			SHUTDOWN     = 7,
+			SET_PERFORMANCE_LEVEL = 8,
+			GET_SYSTEM_DIRECTORY = 9,
+			SET_PIXEL_FORMAT = 10,
+			SET_INPUT_DESCRIPTORS = 11,
+			SET_KEYBOARD_CALLBACK = 12,
+			SET_DISK_CONTROL_INTERFACE = 13,
+			SET_HW_RENDER = 14,
+			GET_VARIABLE = 15,
+			SET_VARIABLES = 16,
+			GET_VARIABLE_UPDATE = 17,
+			SET_SUPPORT_NO_GAME = 18,
+			GET_LIBRETRO_PATH = 19,
+			SET_AUDIO_CALLBACK = 22,
+			SET_FRAME_TIME_CALLBACK = 21,
+			GET_RUMBLE_INTERFACE = 23,
+			GET_INPUT_DEVICE_CAPABILITIES = 24,
+			GET_SENSOR_INTERFACE = (25 | ENVIRONMENT_EXPERIMENTAL),
+			GET_CAMERA_INTERFACE = (26 | ENVIRONMENT_EXPERIMENTAL),
+			GET_LOG_INTERFACE = 27,
+			GET_PERF_INTERFACE = 28,
+			GET_LOCATION_INTERFACE = 29,
+			GET_CONTENT_DIRECTORY = 30,
+			GET_SAVE_DIRECTORY = 31,
+			SET_SYSTEM_AV_INFO = 32,
+			SET_PROC_ADDRESS_CALLBACK = 33,
+			SET_SUBSYSTEM_INFO = 34,
+			SET_CONTROLLER_INFO = 35,
+			SET_MEMORY_MAPS = (36 | ENVIRONMENT_EXPERIMENTAL),
+			SET_GEOMETRY = 37,
+			GET_USERNAME = 38,
+			GET_LANGUAGE = 39
+		}
 		
 // #define RETRO_ENVIRONMENT_SET_ROTATION  1  /* const unsigned * --
 // #define RETRO_ENVIRONMENT_GET_OVERSCAN  2  /* bool * --
@@ -491,8 +495,10 @@ class Libretro {
 			ERROR
 		}
 		
+		//disgusting stuff. since C# doesn't support varargs, I assume it's not
+		// called with more than 8 arguments and forward all eight to sprintf.
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		public delegate void log_printf_t(int level, string fmt,
+		public delegate void log_printf_t(log_level level, string fmt,
 	            IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
 	            IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
 		
@@ -528,34 +534,41 @@ class Libretro {
 		public struct perf_counter
 		{
 			public string ident;
-//    retro_perf_tick_t start;
-//    retro_perf_tick_t total;
-//    retro_perf_tick_t call_cnt;
+			public ulong start;
+			public ulong total;
+			public ulong call_cnt;
 			[MarshalAs(UnmanagedType.U1)] public bool registered;
 		}
 		
-// typedef retro_time_t (*retro_perf_get_time_usec_t)(void);
-// 
-// typedef retro_perf_tick_t (*retro_perf_get_counter_t)(void);
-// 
-// typedef uint64_t (*retro_get_cpu_features_t)(void);
-// 
-// typedef void (*retro_perf_log_t)(void);
-// typedef void (*retro_perf_register_t)(struct retro_perf_counter *counter);
-// typedef void (*retro_perf_start_t)(struct retro_perf_counter *counter);
-// typedef void (*retro_perf_stop_t)(struct retro_perf_counter *counter);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate long perf_get_time_usec_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate ulong perf_get_counter_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate ulong get_cpu_features_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void perf_log_t();
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void perf_register_t(out perf_counter counter);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void perf_start_t(out perf_counter counter);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void perf_stop_t(out perf_counter counter);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct perf_callback
 		{
-//    retro_perf_get_time_usec_t    get_time_usec;
-//    retro_get_cpu_features_t      get_cpu_features;
-// 
-//    retro_perf_get_counter_t      get_perf_counter;
-//    retro_perf_register_t         perf_register;
-//    retro_perf_start_t            perf_start;
-//    retro_perf_stop_t             perf_stop;
-//    retro_perf_log_t              perf_log;
+			perf_get_time_usec_t    get_time_usec;
+			get_cpu_features_t      get_cpu_features;
+			
+			perf_get_counter_t      get_perf_counter;
+			perf_register_t         perf_register;
+			perf_start_t            perf_start;
+			perf_stop_t             perf_stop;
+			perf_log_t              perf_log;
 		}
 		
 		public enum sensor_action {
@@ -568,17 +581,19 @@ class Libretro {
 			ACCELEROMETER_Y,
 			ACCELEROMETER_Z
 		}
-
-// typedef bool (*retro_set_sensor_state_t)(unsigned port, 
-//       enum retro_sensor_action action, unsigned rate);
-// 
-// typedef float (*retro_sensor_get_input_t)(unsigned port, unsigned id);
-// 
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate void set_sensor_state_t(uint port, sensor_action action, uint rate);
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate float sensor_get_input_t(uint port, uint rate);
+		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct sensor_interface
 		{
-//    retro_set_sensor_state_t set_sensor_state;
-//    retro_sensor_get_input_t get_sensor_input;
+			set_sensor_state_t set_sensor_state;
+			sensor_get_input_t get_sensor_input;
 		}
 		
 		public enum camera_buffer
@@ -921,11 +936,14 @@ class Libretro {
 	
 	Raw raw;
 	
-	public Libretro(string dll)
+	public Libretro(string dll, log_cb_t log)
 	{
 		raw = new Raw(dll);
-		System.Console.WriteLine(raw.api_version());
-		
+		log_cb = log;
+	}
+	
+	public void init()
+	{
 		raw.set_environment(env);
 		raw.init();
 	}
@@ -937,8 +955,8 @@ class Libretro {
 		{
 			case Raw.ENVIRONMENT_GET_LOG_INTERFACE:
 			{
-				log_callback log = new log_callback();
-				log.log = log_cb;
+				Raw.log_callback log = new Raw.log_callback();
+				log.log = log_printf_cb;
 				Marshal.StructureToPtr(log, data, false);
 				return true;
 			}
@@ -952,14 +970,16 @@ class Libretro {
 	                                    IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
 	                                    IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
 	
-	void log_cb(int level, string fmt,
+	void log_printf_cb(Raw.log_level level, string fmt,
 	            IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
 	            IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8)
 	{
+		if (log_cb==null) return;
+		
 		System.Text.StringBuilder sb = new System.Text.StringBuilder(256);
 		while (true) {
 			int len = _snprintf(sb, new IntPtr(sb.Capacity), fmt, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-			//shitty _snprintf, returning negative values on overflow instead of the length like the real snprintf
+			//stupid _snprintf, returning negative values on overflow instead of the length. do it properly.
 			if (len <= 0 || len >= sb.Capacity)
 			{
 				sb.Capacity *= 2;
@@ -969,18 +989,24 @@ class Libretro {
 			break;
 		} while (sb.Length >= sb.Capacity);
 		
-		//TODO: forward outwards
-		System.Console.WriteLine("Log: "+sb);
+		log_cb(level, sb.ToString());
 	}
+	
+	public delegate void log_cb_t(Raw.log_level level, string text);
+	log_cb_t log_cb;
 }
 
 class TinyGUI
 {
 	static void Main()
 	{
-		//Libretro core = new Libretro("snes9x_libretro.dll");
-		Libretro core = new Libretro("minir_testcore_libretro.dll");
-		
-		
+		//Libretro core = new Libretro("snes9x_libretro.dll", log);
+		Libretro core = new Libretro("minir_testcore_libretro.dll", log);
+		core.init();
+	}
+	
+	static void log(int level, string text)
+	{
+		System.Console.WriteLine("Log: "+text);
 	}
 }
