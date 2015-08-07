@@ -241,122 +241,138 @@ class Libretro {
 			camera_lifetime_status_t deinitialized;
 		}
 		
-// typedef void (*retro_location_set_interval_t)(unsigned interval_ms,
-//       unsigned interval_distance);
-// 
-// typedef bool (*retro_location_start_t)(void);
-// 
-// typedef void (*retro_location_stop_t)(void);
-// 
-// typedef bool (*retro_location_get_position_t)(double *lat, double *lon,
-//       double *horiz_accuracy, double *vert_accuracy);
-// 
-// typedef void (*retro_location_lifetime_status_t)(void);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void location_set_interval_t(uint interval_ms, uint interval_distance);
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool location_start_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void location_stop_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool location_get_position_t(out double lat, out double lon, out double horiz_accuracy, out double vert_accuracy);
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void location_lifetime_status_t();
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct location_callback
 		{
-//    retro_location_start_t         start;
-//    retro_location_stop_t          stop;
-//    retro_location_get_position_t  get_position;
-//    retro_location_set_interval_t  set_interval;
-// 
-//    retro_location_lifetime_status_t initialized;
-//    retro_location_lifetime_status_t deinitialized;
+			public location_start_t         start;
+			public location_stop_t          stop;
+			public location_get_position_t  get_position;
+			public location_set_interval_t  set_interval;
+			
+			public location_lifetime_status_t initialized;
+			public location_lifetime_status_t deinitialized;
 		}
 		
-// typedef bool (*retro_set_rumble_state_t)(unsigned port, 
-//       enum retro_rumble_effect effect, uint16_t strength);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool set_rumble_state_t(uint port, int effect, ushort strength);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct rumble_interface
 		{
-//    retro_set_rumble_state_t set_rumble_state;
+			public set_rumble_state_t set_rumble_state;
 		}
 		
-// typedef void (*retro_audio_callback_t)(void);
-// 
-// typedef void (*retro_audio_set_state_callback_t)(bool enabled);
-
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void audio_callback_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void audio_set_state_callback_t([MarshalAs(UnmanagedType.U1)] bool enabled);
+		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct audio_callback
 		{
-//    retro_audio_callback_t callback;
-//    retro_audio_set_state_callback_t set_state;
+			public audio_callback_t callback;
+			public audio_set_state_callback_t set_state;
 		}
 		
-// typedef int64_t retro_usec_t;
-// typedef void (*retro_frame_time_callback_t)(retro_usec_t usec);
+		// typedef int64_t retro_usec_t;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void frame_time_callback_t(long usec);
+		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct frame_time_callback
 		{
-//    retro_frame_time_callback_t callback;
+			frame_time_callback_t callback;
 			public long reference;
 		}
 		
-		public const long HW_FRAME_BUFFER_VALID = -1;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void hw_context_reset_t();
 		
-// typedef void (*retro_hw_context_reset_t)(void);
-// 
-// typedef uintptr_t (*retro_hw_get_current_framebuffer_t)(void);
-// 
-// typedef retro_proc_address_t (*retro_hw_get_proc_address_t)(const char *sym);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate UIntPtr hw_get_current_framebuffer_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		public delegate IntPtr hw_get_proc_address_t(string sym);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct hw_render_callback
 		{
-//    enum retro_hw_context_type context_type;
-//    retro_hw_context_reset_t context_reset;
-//    retro_hw_get_current_framebuffer_t get_current_framebuffer;
-//    retro_hw_get_proc_address_t get_proc_address;
+			int context_type;
+			public hw_context_reset_t context_reset;
+			public hw_get_current_framebuffer_t get_current_framebuffer;
+			public hw_get_proc_address_t get_proc_address;
 			[MarshalAs(UnmanagedType.U1)] public bool depth;
 			[MarshalAs(UnmanagedType.U1)] public bool stencil;
 			[MarshalAs(UnmanagedType.U1)] public bool bottom_left_origin;
 			uint version_major;
 			uint version_minor;
 			[MarshalAs(UnmanagedType.U1)] public bool cache_context;
-//    retro_hw_context_reset_t context_destroy;
+			public hw_context_reset_t context_destroy;
 			[MarshalAs(UnmanagedType.U1)] public bool debug_context;
 		}
 		
-// typedef void (*retro_keyboard_event_t)(bool down, unsigned keycode, 
-//       uint32_t character, uint16_t key_modifiers);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void keyboard_event_t([MarshalAs(UnmanagedType.U1)] bool down, uint keycode, uint character, ushort key_modifier);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct keyboard_callback
 		{
-//    retro_keyboard_event_t callback;
+			public keyboard_event_t callback;
 		}
-
-// typedef bool (*retro_set_eject_state_t)(bool ejected);
-// 
-// typedef bool (*retro_get_eject_state_t)(void);
-// 
-// typedef unsigned (*retro_get_image_index_t)(void);
-// 
-// typedef bool (*retro_set_image_index_t)(unsigned index);
-// 
-// typedef unsigned (*retro_get_num_images_t)(void);
-// 
-// struct retro_game_info;
-// 
-// typedef bool (*retro_replace_image_index_t)(unsigned index,
-//       const struct retro_game_info *info);
-// 
-// typedef bool (*retro_add_image_index_t)(void);
-
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool set_eject_state_t([MarshalAs(UnmanagedType.U1)] bool ejected);
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool get_eject_state_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate uint get_image_index_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void set_image_index_t(uint index);
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool replace_image_index_t(uint index, IntPtr info);//retro_game_info
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool add_image_index_t();
+		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct disk_control_callback
 		{
-//    retro_set_eject_state_t set_eject_state;
-//    retro_get_eject_state_t get_eject_state;
-// 
-//    retro_get_image_index_t get_image_index;
-//    retro_set_image_index_t set_image_index;
-//    retro_get_num_images_t  get_num_images;
-// 
-//    retro_replace_image_index_t replace_image_index;
-//    retro_add_image_index_t add_image_index;
+			public set_eject_state_t set_eject_state;
+			public get_eject_state_t get_eject_state;
+			
+			public get_image_index_t get_image_index;
+			public set_image_index_t set_image_index;
+			public get_num_images_t  get_num_images;
+			
+			public replace_image_index_t replace_image_index;
+			public add_image_index_t add_image_index;
 		}
 		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -630,29 +646,29 @@ class Libretro {
 	
 	public enum Key
 	{
-		UNKNOWN        = 0,
-		FIRST          = 0,
-		BACKSPACE      = 8,
-		TAB            = 9,
-		CLEAR          = 12,
-		RETURN         = 13,
-		PAUSE          = 19,
-		ESCAPE         = 27,
-		SPACE          = 32,
-		EXCLAIM        = 33,
-		QUOTEDBL       = 34,
-		HASH           = 35,
-		DOLLAR         = 36,
-		AMPERSAND      = 38,
-		QUOTE          = 39,
-		LEFTPAREN      = 40,
-		RIGHTPAREN     = 41,
-		ASTERISK       = 42,
-		PLUS           = 43,
-		COMMA          = 44,
-		MINUS          = 45,
-		PERIOD         = 46,
-		SLASH          = 47,
+		Unknown        = 0,
+		First          = 0,
+		Backspace      = 8,
+		Tab            = 9,
+		Clear          = 12,
+		Return         = 13,
+		Pause          = 19,
+		Escape         = 27,
+		Space          = 32,
+		Exclaim        = 33,
+		QuoteDbl       = 34,
+		Hash           = 35,
+		Dollar         = 36,
+		Ampersand      = 38,
+		Quote          = 39,
+		LeftParen      = 40,
+		RightParen     = 41,
+		Asterisk       = 42,
+		Plus           = 43,
+		Comma          = 44,
+		Minus          = 45,
+		Period         = 46,
+		Slash          = 47,
 		_0             = 48,
 		_1             = 49,
 		_2             = 50,
@@ -663,19 +679,19 @@ class Libretro {
 		_7             = 55,
 		_8             = 56,
 		_9             = 57,
-		COLON          = 58,
-		SEMICOLON      = 59,
-		LESS           = 60,
-		EQUALS         = 61,
-		GREATER        = 62,
-		QUESTION       = 63,
-		AT             = 64,
-		LEFTBRACKET    = 91,
-		BACKSLASH      = 92,
-		RIGHTBRACKET   = 93,
-		CARET          = 94,
-		UNDERSCORE     = 95,
-		BACKQUOTE      = 96,
+		Colon          = 58,
+		Semicolon      = 59,
+		Less           = 60,
+		Equals         = 61,
+		Greater        = 62,
+		Question       = 63,
+		At             = 64,
+		LeftBracket    = 91,
+		Backslash      = 92,
+		RightBracket   = 93,
+		Caret          = 94,
+		Underscore     = 95,
+		Backquote      = 96,
 		a              = 97,
 		b              = 98,
 		c              = 99,
@@ -702,7 +718,7 @@ class Libretro {
 		x              = 120,
 		y              = 121,
 		z              = 122,
-		DELETE         = 127,
+		Delete         = 127,
 		
 		KP0            = 256,
 		KP1            = 257,
@@ -714,23 +730,23 @@ class Libretro {
 		KP7            = 263,
 		KP8            = 264,
 		KP9            = 265,
-		KP_PERIOD      = 266,
-		KP_DIVIDE      = 267,
-		KP_MULTIPLY    = 268,
-		KP_MINUS       = 269,
-		KP_PLUS        = 270,
-		KP_ENTER       = 271,
-		KP_EQUALS      = 272,
+		KP_Period      = 266,
+		KP_Divide      = 267,
+		KP_Multiply    = 268,
+		KP_Minus       = 269,
+		KP_Plus        = 270,
+		KP_Enter       = 271,
+		KP_Equals      = 272,
 		
-		UP             = 273,
-		DOWN           = 274,
-		RIGHT          = 275,
-		LEFT           = 276,
-		INSERT         = 277,
-		HOME           = 278,
-		END            = 279,
-		PAGEUP         = 280,
-		PAGEDOWN       = 281,
+		Up             = 273,
+		Down           = 274,
+		Right          = 275,
+		Left           = 276,
+		Insert         = 277,
+		Home           = 278,
+		End            = 279,
+		PageUp         = 280,
+		PageDown       = 281,
 		
 		F1             = 282,
 		F2             = 283,
@@ -748,32 +764,32 @@ class Libretro {
 		F14            = 295,
 		F15            = 296,
 		
-		NUMLOCK        = 300,
-		CAPSLOCK       = 301,
-		SCROLLOCK      = 302,
-		RSHIFT         = 303,
-		LSHIFT         = 304,
-		RCTRL          = 305,
-		LCTRL          = 306,
-		RALT           = 307,
-		LALT           = 308,
-		RMETA          = 309,
-		LMETA          = 310,
-		LSUPER         = 311,
-		RSUPER         = 312,
-		MODE           = 313,
-		COMPOSE        = 314,
+		NumLock        = 300,
+		CapsLock       = 301,
+		ScrolLock      = 302,
+		RShift         = 303,
+		LShift         = 304,
+		RCtrl          = 305,
+		LCtrl          = 306,
+		RAlt           = 307,
+		LAlt           = 308,
+		RMeta          = 309,
+		LMeta          = 310,
+		LSuper         = 311,
+		RSuper         = 312,
+		Mode           = 313,
+		Compose        = 314,
 		
-		HELP           = 315,
-		PRINT          = 316,
-		SYSREQ         = 317,
-		BREAK          = 318,
-		MENU           = 319,
-		POWER          = 320,
-		EURO           = 321,
-		UNDO           = 322,
+		Help           = 315,
+		Print          = 316,
+		SysReq         = 317,
+		Break          = 318,
+		Menu           = 319,
+		Power          = 320,
+		Euro           = 321,
+		Undo           = 322,
 		
-		LAST
+		Last
 	}
 	
 	public enum KeyMod {
@@ -793,44 +809,143 @@ class Libretro {
 		Experimental = 0x10000,
 		Private = 0x20000,
 		
-		SET_ROTATION = 1,
-		GET_OVERSCAN = 2,
-		GET_CAN_DUPE = 3,
-		SET_MESSAGE  = 6,
-		SHUTDOWN     = 7,
-		SET_PERFORMANCE_LEVEL = 8,
-		GET_SYSTEM_DIRECTORY = 9,
-		SET_PIXEL_FORMAT = 10,
-		SET_INPUT_DESCRIPTORS = 11,
-		SET_KEYBOARD_CALLBACK = 12,
-		SET_DISK_CONTROL_INTERFACE = 13,
-		SET_HW_RENDER = 14,
-		GET_VARIABLE = 15,
-		SET_VARIABLES = 16,
-		GET_VARIABLE_UPDATE = 17,
-		SET_SUPPORT_NO_GAME = 18,
-		GET_LIBRETRO_PATH = 19,
-		SET_AUDIO_CALLBACK = 22,
-		SET_FRAME_TIME_CALLBACK = 21,
-		GET_RUMBLE_INTERFACE = 23,
-		GET_INPUT_DEVICE_CAPABILITIES = 24,
-		GET_SENSOR_INTERFACE = (25 | Experimental),
-		GET_CAMERA_INTERFACE = (26 | Experimental),
-		GET_LOG_INTERFACE = 27,
-		GET_PERF_INTERFACE = 28,
-		GET_LOCATION_INTERFACE = 29,
-		GET_CONTENT_DIRECTORY = 30,
-		GET_SAVE_DIRECTORY = 31,
-		SET_SYSTEM_AV_INFO = 32,
-		SET_PROC_ADDRESS_CALLBACK = 33,
-		SET_SUBSYSTEM_INFO = 34,
-		SET_CONTROLLER_INFO = 35,
-		SET_MEMORY_MAPS = (36 | Experimental),
-		SET_GEOMETRY = 37,
-		GET_USERNAME = 38,
-		GET_LANGUAGE = 39
+		SetRotation = 1,
+		GetOverscan = 2,
+		GetCanDupe = 3,
+		SetMessage = 6,
+		Shutdown = 7,
+		SetPerformanceLevel = 8,
+		GetSystemDirectory = 9,
+		SetPixelFormat = 10,
+		SetInputDescriptors = 11,
+		SetKeyboardCallback = 12,
+		SetDiskControlInterface = 13,
+		SetHWRender = 14,
+		GetVariable = 15,
+		SetVariables = 16,
+		GetVariableUpdate = 17,
+		SetSupportNoGame = 18,
+		GetLibretroPath = 19,
+		SetAudioCallback = 22,
+		SetFrameTimeCallback = 21,
+		GetRumbleInterface = 23,
+		GetInputDeviceCapabilities = 24,
+		GetSensorInterface = (25 | Experimental),
+		GetCameraInterface = (26 | Experimental),
+		GetLogInterface = 27,
+		GetPerfInterface = 28,
+		GetLocationInterface = 29,
+		GetContentDirectory = 30,
+		GetSaveDirectory = 31,
+		SetSystemAVInfo = 32,
+		SetProcAddressCallback = 33,
+		SetSubsystemInfo = 34,
+		SetControllerInfo = 35,
+		SetMemoryMaps = (36 | Experimental),
+		SetGeometry = 37,
+		GetUsername = 38,
+		GetLanguage = 39
 	}
 	
+	public enum MemDesc {
+		Const     = (1 << 0),
+		BigEndian = (1 << 1),
+		Align2    = (1 << 16),
+		Align4    = (2 << 16),
+		Align8    = (3 << 16),
+		Minsize2  = (1 << 24),
+		Minsize4  = (2 << 24),
+		Minsize8  = (3 << 24)
+	}
+	
+	public enum LogLevel {
+		Debug,
+		Info,
+		Warn,
+		Error
+	}
+	
+	public enum CpuFeat {
+		SimdSSE    = (1 << 0),
+		SimdSSE2   = (1 << 1),
+		SimdVMX    = (1 << 2),
+		SimdVMX128 = (1 << 3),
+		SimdAVX    = (1 << 4),
+		SimdNEON   = (1 << 5),
+		SimdSSE3   = (1 << 6),
+		SimdSSSE3  = (1 << 7),
+		SimdMMX    = (1 << 8),
+		SimdMMXEXT = (1 << 9),
+		SimdSSE4   = (1 << 10),
+		SimdSSE42  = (1 << 11),
+		SimdAVX2   = (1 << 12),
+		SimdVFPU   = (1 << 13),
+		SimdPS     = (1 << 14),
+		SimdAES    = (1 << 15)
+	}
+	
+	public enum sensor_action {
+		AccelerometerEnable,
+		AccelerometerDisable
+	}
+	
+	public enum sensor_id {
+		AccelerometerX,
+		AccelerometerY,
+		AccelerometerZ
+	}
+	
+	public enum camera_buffer
+	{
+		OpenGLTexture,
+		RawFramebuffer
+	}
+	
+	public enum rumble_effect
+	{
+		Strong,
+		Weak
+	};
+	
+	public const long HWFrameBufferValid = -1;
+	
+	public enum hw_context_type
+	{
+		None,
+		OpenGL,
+		OpenGLES2,
+		OpenGLCore,
+		OpenGLES3,
+		OpenGLESVersion
+	}
+	
+	public enum pixel_format {
+		XRGB1555,
+		XRGB8888,
+		RGB565
+	}
+	
+	
+	
+	Raw raw;
+	
+	public Libretro(string dll, log_cb_t log)
+	{
+		raw = new Raw(dll);
+		log_cb = log;
+	}
+	
+	public void init()
+	{
+		raw.set_environment(env);
+		raw.init();
+	}
+	
+	bool env(uint cmd, IntPtr data)
+	{
+		System.Console.WriteLine("Env "+cmd);
+		switch ((Environment)cmd)
+		{
 // #define RETRO_ENVIRONMENT_SET_ROTATION  1  /* const unsigned * --
 // #define RETRO_ENVIRONMENT_GET_OVERSCAN  2  /* bool * --
 // #define RETRO_ENVIRONMENT_GET_CAN_DUPE  3  /* bool * --
@@ -867,105 +982,7 @@ class Libretro {
 // #define RETRO_ENVIRONMENT_SET_GEOMETRY 37 /* const struct retro_game_geometry * --
 // #define RETRO_ENVIRONMENT_GET_USERNAME 38  /* const char **
 // #define RETRO_ENVIRONMENT_GET_LANGUAGE 39 /* unsigned * --
-	
-	public enum MemDesc {
-		CONST     = (1 << 0),
-		BIGENDIAN = (1 << 1),
-		ALIGN_2   = (1 << 16),
-		ALIGN_4   = (2 << 16),
-		ALIGN_8   = (3 << 16),
-		MINSIZE_2 = (1 << 24),
-		MINSIZE_4 = (2 << 24),
-		MINSIZE_8 = (3 << 24)
-	}
-	
-	public enum LogLevel {
-		DEBUG,
-		INFO,
-		WARN,
-		ERROR
-	}
-	
-	public enum CpuFeat {
-		SIMD_SSE    = (1 << 0),
-		SIMD_SSE2   = (1 << 1),
-		SIMD_VMX    = (1 << 2),
-		SIMD_VMX128 = (1 << 3),
-		SIMD_AVX    = (1 << 4),
-		SIMD_NEON   = (1 << 5),
-		SIMD_SSE3   = (1 << 6),
-		SIMD_SSSE3  = (1 << 7),
-		SIMD_MMX    = (1 << 8),
-		SIMD_MMXEXT = (1 << 9),
-		SIMD_SSE4   = (1 << 10),
-		SIMD_SSE42  = (1 << 11),
-		SIMD_AVX2   = (1 << 12),
-		SIMD_VFPU   = (1 << 13),
-		SIMD_PS     = (1 << 14),
-		SIMD_AES    = (1 << 15)
-	}
-	
-	public enum sensor_action {
-		ACCELEROMETER_ENABLE,
-		ACCELEROMETER_DISABLE
-	}
-	
-	public enum sensor_id {
-		ACCELEROMETER_X,
-		ACCELEROMETER_Y,
-		ACCELEROMETER_Z
-	}
-	
-	public enum camera_buffer
-	{
-		OPENGL_TEXTURE,
-		RAW_FRAMEBUFFER
-	}
-	
-	public enum rumble_effect
-	{
-		STRONG,
-		WEAK
-	};
-	
-	public enum hw_context_type
-	{
-		NONE,
-		OPENGL,
-		OPENGLES2,
-		OPENGL_CORE,
-		OPENGLES3,
-		OPENGLES_VERSION
-	}
-	
-	public enum pixel_format {
-		XRGB1555,
-		XRGB8888,
-		RGB565
-	}
-	
-	
-	
-	Raw raw;
-	
-	public Libretro(string dll, log_cb_t log)
-	{
-		raw = new Raw(dll);
-		log_cb = log;
-	}
-	
-	public void init()
-	{
-		raw.set_environment(env);
-		raw.init();
-	}
-	
-	bool env(uint cmd, IntPtr data)
-	{
-		System.Console.WriteLine("Env "+cmd);
-		switch ((Environment)cmd)
-		{
-			case Environment.GET_LOG_INTERFACE:
+			case Environment.GetLogInterface:
 			{
 				Raw.log_callback log = new Raw.log_callback();
 				log.log = log_printf_cb;
