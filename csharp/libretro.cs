@@ -139,13 +139,6 @@ class Libretro {
 			get_proc_address_t get_proc_address;
 		}
 		
-		public enum log_level {
-			DEBUG,
-			INFO,
-			WARN,
-			ERROR
-		}
-		
 		//disgusting stuff. since C# doesn't support varargs, I assume it's not
 		// called with more than 8 arguments and forward all eight to sprintf.
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
@@ -157,25 +150,6 @@ class Libretro {
 		public struct log_callback
 		{
 			public log_printf_t log;
-		}
-		
-		public enum CpuFeat {
-			SIMD_SSE    = (1 << 0),
-			SIMD_SSE2   = (1 << 1),
-			SIMD_VMX    = (1 << 2),
-			SIMD_VMX128 = (1 << 3),
-			SIMD_AVX    = (1 << 4),
-			SIMD_NEON   = (1 << 5),
-			SIMD_SSE3   = (1 << 6),
-			SIMD_SSSE3  = (1 << 7),
-			SIMD_MMX    = (1 << 8),
-			SIMD_MMXEXT = (1 << 9),
-			SIMD_SSE4   = (1 << 10),
-			SIMD_SSE42  = (1 << 11),
-			SIMD_AVX2   = (1 << 12),
-			SIMD_VFPU   = (1 << 13),
-			SIMD_PS     = (1 << 14),
-			SIMD_AES    = (1 << 15)
 		}
 		
 		// typedef uint64_t retro_perf_tick_t;
@@ -222,17 +196,6 @@ class Libretro {
 			perf_log_t              perf_log;
 		}
 		
-		public enum sensor_action {
-			ACCELEROMETER_ENABLE,
-			ACCELEROMETER_DISABLE
-		}
-		
-		public enum sensor_id {
-			ACCELEROMETER_X,
-			ACCELEROMETER_Y,
-			ACCELEROMETER_Z
-		}
-		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
 		public delegate void set_sensor_state_t(uint port, sensor_action action, uint rate);
@@ -245,12 +208,6 @@ class Libretro {
 		{
 			set_sensor_state_t set_sensor_state;
 			sensor_get_input_t get_sensor_input;
-		}
-		
-		public enum camera_buffer
-		{
-			OPENGL_TEXTURE,
-			RAW_FRAMEBUFFER
 		}
 		
 // typedef bool (*retro_camera_start_t)(void);
@@ -303,12 +260,6 @@ class Libretro {
 //    retro_location_lifetime_status_t deinitialized;
 		}
 		
-		public enum rumble_effect
-		{
-			STRONG,
-			WEAK
-		};
-		
 // typedef bool (*retro_set_rumble_state_t)(unsigned port, 
 //       enum retro_rumble_effect effect, uint16_t strength);
 		
@@ -345,16 +296,6 @@ class Libretro {
 // typedef uintptr_t (*retro_hw_get_current_framebuffer_t)(void);
 // 
 // typedef retro_proc_address_t (*retro_hw_get_proc_address_t)(const char *sym);
-		
-		public enum hw_context_type
-		{
-			NONE,
-			OPENGL,
-			OPENGLES2,
-			OPENGL_CORE,
-			OPENGLES3,
-			OPENGLES_VERSION
-		}
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct hw_render_callback
@@ -411,12 +352,6 @@ class Libretro {
 // 
 //    retro_replace_image_index_t replace_image_index;
 //    retro_add_image_index_t add_image_index;
-		}
-		
-		public enum pixel_format {
-			XRGB1555,
-			XRGB8888,
-			RGB565
 		}
 		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -584,6 +519,8 @@ class Libretro {
 		public delegate UIntPtr get_memory_size_t(uint id);
 		public get_memory_size_t get_memory_size;
 	}
+	
+	
 	
 	public const uint DEVICE_TYPE_SHIFT = 8;
 	public const uint DEVICE_MASK = ((1 << (int)DEVICE_TYPE_SHIFT) - 1);
@@ -933,6 +870,73 @@ class Libretro {
 	public const int MEMDESC_MINSIZE_2 = (1 << 24);
 	public const int MEMDESC_MINSIZE_4 = (2 << 24);
 	public const int MEMDESC_MINSIZE_8 = (3 << 24);
+	
+	public enum log_level {
+		DEBUG,
+		INFO,
+		WARN,
+		ERROR
+	}
+	
+	public enum CpuFeat {
+		SIMD_SSE    = (1 << 0),
+		SIMD_SSE2   = (1 << 1),
+		SIMD_VMX    = (1 << 2),
+		SIMD_VMX128 = (1 << 3),
+		SIMD_AVX    = (1 << 4),
+		SIMD_NEON   = (1 << 5),
+		SIMD_SSE3   = (1 << 6),
+		SIMD_SSSE3  = (1 << 7),
+		SIMD_MMX    = (1 << 8),
+		SIMD_MMXEXT = (1 << 9),
+		SIMD_SSE4   = (1 << 10),
+		SIMD_SSE42  = (1 << 11),
+		SIMD_AVX2   = (1 << 12),
+		SIMD_VFPU   = (1 << 13),
+		SIMD_PS     = (1 << 14),
+		SIMD_AES    = (1 << 15)
+	}
+	
+	public enum sensor_action {
+		ACCELEROMETER_ENABLE,
+		ACCELEROMETER_DISABLE
+	}
+	
+	public enum sensor_id {
+		ACCELEROMETER_X,
+		ACCELEROMETER_Y,
+		ACCELEROMETER_Z
+	}
+	
+	public enum camera_buffer
+	{
+		OPENGL_TEXTURE,
+		RAW_FRAMEBUFFER
+	}
+	
+	public enum rumble_effect
+	{
+		STRONG,
+		WEAK
+	};
+	
+	public enum hw_context_type
+	{
+		NONE,
+		OPENGL,
+		OPENGLES2,
+		OPENGL_CORE,
+		OPENGLES3,
+		OPENGLES_VERSION
+	}
+	
+	public enum pixel_format {
+		XRGB1555,
+		XRGB8888,
+		RGB565
+	}
+	
+	
 	
 	Raw raw;
 	
