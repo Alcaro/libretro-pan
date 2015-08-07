@@ -414,7 +414,7 @@ class Libretro {
 		public struct memory_descriptor
 		{
 			public ulong flags;
-			public IntPtr ptr;
+			public IntPtr ptr; // uint8_t[]
 			public UIntPtr offset;
 			public UIntPtr start;
 			public UIntPtr select;
@@ -425,7 +425,7 @@ class Libretro {
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct memory_map {
-			public IntPtr descriptors;
+			public IntPtr descriptors; // const memory_descriptor[]
 			public uint num_descriptors;
 		}
 		
@@ -436,94 +436,100 @@ class Libretro {
 			public uint id;
 		}
 		
-// struct retro_controller_info
-// {
-//    const struct retro_controller_description *types;
-//    unsigned num_types;
-// };
-// 
-// struct retro_subsystem_memory_info
-// {
-//    const char *extension;
-//    unsigned type;
-// };
-// 
-// struct retro_subsystem_rom_info
-// {
-//    const char *desc;
-//    const char *valid_extensions;
-//    bool need_fullpath;
-//    bool block_extract;
-//    bool required;
-//    const struct retro_subsystem_memory_info *memory;
-//    unsigned num_memory;
-// };
-// 
-// struct retro_subsystem_info
-// {
-//    const char *desc;
-//    const char *ident;
-//    const struct retro_subsystem_rom_info *roms;
-//    unsigned num_roms;
-//    unsigned id;
-// };
-// 
+		[StructLayout(LayoutKind.Sequential)]
+		public struct controller_info
+		{
+			public IntPtr types; // controller_description[]
+			public uint num_types;
+		}
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct subsystem_memory_info
+		{
+			public string extension;
+			public uint type;
+		}
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct subsystem_rom_info
+		{
+			public string desc;
+			public string valid_extensions;
+			[MarshalAs(UnmanagedType.U1)] public bool need_fullpath;
+			[MarshalAs(UnmanagedType.U1)] public bool block_extract;
+			[MarshalAs(UnmanagedType.U1)] public bool required;
+			public IntPtr memory; // subsystem_memory_info[]
+			uint num_memory;
+		};
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct subsystem_info
+		{
+			public string desc;
+			public string ident;
+			public IntPtr roms; // subsystem_rom_info[]
+			uint num_roms;
+			uint id;
+		}
+		
 // typedef void (*retro_proc_address_t)(void);
 // 
 // typedef retro_proc_address_t (*retro_get_proc_address_t)(const char *sym);
-// 
-// struct retro_get_proc_address_interface
-// {
-//    retro_get_proc_address_t get_proc_address;
-// };
-// 
-// enum retro_log_level
-// {
-//    RETRO_LOG_DEBUG = 0,
-//    RETRO_LOG_INFO,
-//    RETRO_LOG_WARN,
-//    RETRO_LOG_ERROR,
-// 
-//    RETRO_LOG_DUMMY = INT_MAX
-// };
-// 
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct get_proc_address_interface
+		{
+// retro_get_proc_address_t get_proc_address;
+		}
+		
+		public enum log_level {
+			DEBUG,
+			INFO,
+			WARN,
+			ERROR
+		}
+		
 // typedef void (*retro_log_printf_t)(enum retro_log_level level,
 //       const char *fmt, ...);
-// 
-// struct retro_log_callback
-// {
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct log_callback
+		{
 //    retro_log_printf_t log;
-// };
-// 
-// #define RETRO_SIMD_SSE      (1 << 0)
-// #define RETRO_SIMD_SSE2     (1 << 1)
-// #define RETRO_SIMD_VMX      (1 << 2)
-// #define RETRO_SIMD_VMX128   (1 << 3)
-// #define RETRO_SIMD_AVX      (1 << 4)
-// #define RETRO_SIMD_NEON     (1 << 5)
-// #define RETRO_SIMD_SSE3     (1 << 6)
-// #define RETRO_SIMD_SSSE3    (1 << 7)
-// #define RETRO_SIMD_MMX      (1 << 8)
-// #define RETRO_SIMD_MMXEXT   (1 << 9)
-// #define RETRO_SIMD_SSE4     (1 << 10)
-// #define RETRO_SIMD_SSE42    (1 << 11)
-// #define RETRO_SIMD_AVX2     (1 << 12)
-// #define RETRO_SIMD_VFPU     (1 << 13)
-// #define RETRO_SIMD_PS       (1 << 14)
-// #define RETRO_SIMD_AES      (1 << 15)
-// 
-// typedef uint64_t retro_perf_tick_t;
-// typedef int64_t retro_time_t;
-// 
-// struct retro_perf_counter
-// {
-//    const char *ident;
+		}
+		
+		public enum CpuFeat {
+			SIMD_SSE    = (1 << 0),
+			SIMD_SSE2   = (1 << 1),
+			SIMD_VMX    = (1 << 2),
+			SIMD_VMX128 = (1 << 3),
+			SIMD_AVX    = (1 << 4),
+			SIMD_NEON   = (1 << 5),
+			SIMD_SSE3   = (1 << 6),
+			SIMD_SSSE3  = (1 << 7),
+			SIMD_MMX    = (1 << 8),
+			SIMD_MMXEXT = (1 << 9),
+			SIMD_SSE4   = (1 << 10),
+			SIMD_SSE42  = (1 << 11),
+			SIMD_AVX2   = (1 << 12),
+			SIMD_VFPU   = (1 << 13),
+			SIMD_PS     = (1 << 14),
+			SIMD_AES    = (1 << 15)
+		}
+		
+		// typedef uint64_t retro_perf_tick_t;
+		// typedef int64_t retro_time_t;
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct perf_counter
+		{
+			public string ident;
 //    retro_perf_tick_t start;
 //    retro_perf_tick_t total;
 //    retro_perf_tick_t call_cnt;
-//    bool registered;
-// };
-// 
+			[MarshalAs(UnmanagedType.U1)] public bool registered;
+		}
+		
 // typedef retro_time_t (*retro_perf_get_time_usec_t)(void);
 // 
 // typedef retro_perf_tick_t (*retro_perf_get_counter_t)(void);
@@ -534,9 +540,10 @@ class Libretro {
 // typedef void (*retro_perf_register_t)(struct retro_perf_counter *counter);
 // typedef void (*retro_perf_start_t)(struct retro_perf_counter *counter);
 // typedef void (*retro_perf_stop_t)(struct retro_perf_counter *counter);
-// 
-// struct retro_perf_callback
-// {
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct perf_callback
+		{
 //    retro_perf_get_time_usec_t    get_time_usec;
 //    retro_get_cpu_features_t      get_cpu_features;
 // 
@@ -545,39 +552,37 @@ class Libretro {
 //    retro_perf_start_t            perf_start;
 //    retro_perf_stop_t             perf_stop;
 //    retro_perf_log_t              perf_log;
-// };
-// 
-// enum retro_sensor_action
-// {
-//    RETRO_SENSOR_ACCELEROMETER_ENABLE = 0,
-//    RETRO_SENSOR_ACCELEROMETER_DISABLE,
-// 
-//    RETRO_SENSOR_DUMMY = INT_MAX
-// };
-// 
-// #define RETRO_SENSOR_ACCELEROMETER_X 0
-// #define RETRO_SENSOR_ACCELEROMETER_Y 1
-// #define RETRO_SENSOR_ACCELEROMETER_Z 2
-// 
+		}
+		
+		public enum sensor_action {
+			ACCELEROMETER_ENABLE,
+			ACCELEROMETER_DISABLE
+		}
+		
+		public enum sensor_id {
+			ACCELEROMETER_X,
+			ACCELEROMETER_Y,
+			ACCELEROMETER_Z
+		}
+
 // typedef bool (*retro_set_sensor_state_t)(unsigned port, 
 //       enum retro_sensor_action action, unsigned rate);
 // 
 // typedef float (*retro_sensor_get_input_t)(unsigned port, unsigned id);
 // 
-// struct retro_sensor_interface
-// {
+		[StructLayout(LayoutKind.Sequential)]
+		public struct sensor_interface
+		{
 //    retro_set_sensor_state_t set_sensor_state;
 //    retro_sensor_get_input_t get_sensor_input;
-// };
-// 
-// enum retro_camera_buffer
-// {
-//    RETRO_CAMERA_BUFFER_OPENGL_TEXTURE = 0,
-//    RETRO_CAMERA_BUFFER_RAW_FRAMEBUFFER,
-// 
-//    RETRO_CAMERA_BUFFER_DUMMY = INT_MAX
-// };
-// 
+		}
+		
+		public enum camera_buffer
+		{
+			OPENGL_TEXTURE,
+			RAW_FRAMEBUFFER
+		}
+		
 // typedef bool (*retro_camera_start_t)(void);
 // 
 // typedef void (*retro_camera_stop_t)(void);
@@ -589,20 +594,21 @@ class Libretro {
 // 
 // typedef void (*retro_camera_frame_opengl_texture_t)(unsigned texture_id, 
 //       unsigned texture_target, const float *affine);
-// 
-// struct retro_camera_callback
-// {
-//    uint64_t caps;
-//    unsigned width;
-//    unsigned height;
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct camera_callback
+		{
+			public ulong caps;
+			public uint width;
+			public uint height;
 //    retro_camera_start_t start;
 //    retro_camera_stop_t stop;
 //    retro_camera_frame_raw_framebuffer_t frame_raw_framebuffer;
 //    retro_camera_frame_opengl_texture_t frame_opengl_texture;
 //    retro_camera_lifetime_status_t initialized;
 //    retro_camera_lifetime_status_t deinitialized;
-// };
-// 
+		}
+		
 // typedef void (*retro_location_set_interval_t)(unsigned interval_ms,
 //       unsigned interval_distance);
 // 
@@ -614,9 +620,10 @@ class Libretro {
 //       double *horiz_accuracy, double *vert_accuracy);
 // 
 // typedef void (*retro_location_lifetime_status_t)(void);
-// 
-// struct retro_location_callback
-// {
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct location_callback
+		{
 //    retro_location_start_t         start;
 //    retro_location_stop_t          stop;
 //    retro_location_get_position_t  get_position;
@@ -624,85 +631,87 @@ class Libretro {
 // 
 //    retro_location_lifetime_status_t initialized;
 //    retro_location_lifetime_status_t deinitialized;
-// };
-// 
-// enum retro_rumble_effect
-// {
-//    RETRO_RUMBLE_STRONG = 0,
-//    RETRO_RUMBLE_WEAK = 1,
-// 
-//    RETRO_RUMBLE_DUMMY = INT_MAX
-// };
-// 
+		}
+		
+		public enum rumble_effect
+		{
+			STRONG,
+			WEAK
+		};
+
 // typedef bool (*retro_set_rumble_state_t)(unsigned port, 
 //       enum retro_rumble_effect effect, uint16_t strength);
-// 
-// struct retro_rumble_interface
-// {
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct rumble_interface
+		{
 //    retro_set_rumble_state_t set_rumble_state;
-// };
-// 
+		}
+		
 // typedef void (*retro_audio_callback_t)(void);
 // 
 // typedef void (*retro_audio_set_state_callback_t)(bool enabled);
-// 
-// struct retro_audio_callback
-// {
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct audio_callback
+		{
 //    retro_audio_callback_t callback;
 //    retro_audio_set_state_callback_t set_state;
-// };
-// 
+		}
+		
 // typedef int64_t retro_usec_t;
 // typedef void (*retro_frame_time_callback_t)(retro_usec_t usec);
-// struct retro_frame_time_callback
-// {
+		[StructLayout(LayoutKind.Sequential)]
+		public struct frame_time_callback
+		{
 //    retro_frame_time_callback_t callback;
-//    retro_usec_t reference;
-// };
-// 
-// #define RETRO_HW_FRAME_BUFFER_VALID ((void*)-1)
-// 
+			public long reference;
+		}
+		
+		public const long HW_FRAME_BUFFER_VALID = -1;
+		
 // typedef void (*retro_hw_context_reset_t)(void);
 // 
 // typedef uintptr_t (*retro_hw_get_current_framebuffer_t)(void);
 // 
 // typedef retro_proc_address_t (*retro_hw_get_proc_address_t)(const char *sym);
-// 
-// enum retro_hw_context_type
-// {
-//    RETRO_HW_CONTEXT_NONE             = 0,
-//    RETRO_HW_CONTEXT_OPENGL           = 1, 
-//    RETRO_HW_CONTEXT_OPENGLES2        = 2,
-//    RETRO_HW_CONTEXT_OPENGL_CORE      = 3,
-//    RETRO_HW_CONTEXT_OPENGLES3        = 4,
-//    RETRO_HW_CONTEXT_OPENGLES_VERSION = 5,
-//    RETRO_HW_CONTEXT_DUMMY = INT_MAX
-// };
-// 
-// struct retro_hw_render_callback
-// {
+		
+		public enum hw_context_type
+		{
+			NONE,
+			OPENGL,
+			OPENGLES2,
+			OPENGL_CORE,
+			OPENGLES3,
+			OPENGLES_VERSION
+		}
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct hw_render_callback
+		{
 //    enum retro_hw_context_type context_type;
 //    retro_hw_context_reset_t context_reset;
 //    retro_hw_get_current_framebuffer_t get_current_framebuffer;
 //    retro_hw_get_proc_address_t get_proc_address;
-//    bool depth;
-//    bool stencil;
-//    bool bottom_left_origin;
-//    unsigned version_major;
-//    unsigned version_minor;
-//    bool cache_context;
+			[MarshalAs(UnmanagedType.U1)] public bool depth;
+			[MarshalAs(UnmanagedType.U1)] public bool stencil;
+			[MarshalAs(UnmanagedType.U1)] public bool bottom_left_origin;
+			uint version_major;
+			uint version_minor;
+			[MarshalAs(UnmanagedType.U1)] public bool cache_context;
 //    retro_hw_context_reset_t context_destroy;
-//    bool debug_context;
-// };
-// 
+			[MarshalAs(UnmanagedType.U1)] public bool debug_context;
+		}
+		
 // typedef void (*retro_keyboard_event_t)(bool down, unsigned keycode, 
 //       uint32_t character, uint16_t key_modifiers);
-// 
-// struct retro_keyboard_callback
-// {
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct keyboard_callback
+		{
 //    retro_keyboard_event_t callback;
-// };
-// 
+		}
+
 // typedef bool (*retro_set_eject_state_t)(bool ejected);
 // 
 // typedef bool (*retro_get_eject_state_t)(void);
@@ -719,9 +728,10 @@ class Libretro {
 //       const struct retro_game_info *info);
 // 
 // typedef bool (*retro_add_image_index_t)(void);
-// 
-// struct retro_disk_control_callback
-// {
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct disk_control_callback
+		{
 //    retro_set_eject_state_t set_eject_state;
 //    retro_get_eject_state_t get_eject_state;
 // 
@@ -731,7 +741,7 @@ class Libretro {
 // 
 //    retro_replace_image_index_t replace_image_index;
 //    retro_add_image_index_t add_image_index;
-// };
+		}
 		
 		public enum pixel_format {
 			XRGB1555,
@@ -783,8 +793,8 @@ class Libretro {
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct system_av_info {
-			public IntPtr geometry;//public game_geometry geometry;
-			public IntPtr timing;//public system_timing timing;
+			public IntPtr geometry;//game_geometry*
+			public IntPtr timing;//system_timing*
 		};
 		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -796,20 +806,20 @@ class Libretro {
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		public struct game_info {
 			public string path;
-			public IntPtr data;
+			public IntPtr data;//uint8_t[]
 			public UIntPtr size;
 			public string meta;
 		};
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool environment_t(uint cmd, IntPtr data);
+		public delegate bool environment_t(uint cmd, IntPtr data);//void*
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void video_refresh_t(IntPtr data, uint width, uint height, UIntPtr pitch);
+		public delegate void video_refresh_t(IntPtr data, uint width, uint height, UIntPtr pitch);//void[]
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		public delegate void audio_sample_t(short left, short right);
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void audio_sample_batch_t(IntPtr data, UIntPtr frames);
+		public delegate void audio_sample_batch_t(IntPtr data, UIntPtr frames);//int16_t[]
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		public delegate void input_poll_t();
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -846,7 +856,7 @@ class Libretro {
 		public delegate void get_system_info_t(out system_info info);
 		public get_system_info_t get_system_info;
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void get_system_av_info_t(IntPtr info);//retro_system_av_info
+		public delegate void get_system_av_info_t(out system_av_info info);
 		public get_system_av_info_t get_system_av_info;
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -866,11 +876,11 @@ class Libretro {
 		public serialize_size_t serialize_size;
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool serialize_t(IntPtr data, UIntPtr size);
+		public delegate bool serialize_t(IntPtr data, UIntPtr size);//uint8_t[]
 		public serialize_t serialize;
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool unserialize_t(IntPtr data, UIntPtr size);
+		public delegate bool unserialize_t(IntPtr data, UIntPtr size);//uint8_t[]
 		public unserialize_t unserialize;
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -882,7 +892,7 @@ class Libretro {
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool load_game_t(IntPtr game);//retro_game_info
+		public delegate bool load_game_t(out game_info game);
 		public load_game_t load_game;
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
@@ -924,24 +934,6 @@ class TinyGUI
 	{
 		Libretro core = new Libretro("snes9x_libretro.dll");
 		
-		//System.Console.WriteLine(LibretroRaw.api_version());
 		
-		//LibretroRaw.system_info info;
-		//LibretroRaw.get_system_info(out info);
-		//System.Console.WriteLine(info.library_name);
-		//
-		//LibretroRaw.set_environment(env);
-		//LibretroRaw.init();
-		//
-		//
-	}
-	
-	static bool env(uint cmd, IntPtr data)
-	{
-		System.Console.WriteLine("Env "+cmd);
-		return false;
 	}
 }
-
-
-
