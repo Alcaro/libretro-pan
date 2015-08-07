@@ -57,13 +57,13 @@ class Libretro {
 			get_memory_data = (get_memory_data_t)LoadFromDLL("retro_get_memory_data", typeof(get_memory_data_t));
 			get_memory_size = (get_memory_size_t)LoadFromDLL("retro_get_memory_size", typeof(get_memory_size_t));
 			
-			if (api_version() != API_VERSION)
+			if (api_version() != ApiVersion)
 			{
 				throw new ArgumentException("The given DLL uses wrong version of libretro", "dll");
 			}
 		}
 		
-		public const uint API_VERSION = 1;
+		public const uint ApiVersion = 1;
 		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		public struct memory_descriptor
@@ -142,7 +142,7 @@ class Libretro {
 		//disgusting stuff. since C# doesn't support varargs, I assume it's not
 		// called with more than 8 arguments and forward all eight to sprintf.
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		public delegate void log_printf_t(log_level level, string fmt,
+		public delegate void log_printf_t(int level, string fmt,
 	            IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
 	            IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
 		
@@ -198,7 +198,7 @@ class Libretro {
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate void set_sensor_state_t(uint port, sensor_action action, uint rate);
+		public delegate bool set_sensor_state_t(uint port, sensor_action action, uint rate);
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		public delegate float sensor_get_input_t(uint port, uint rate);
@@ -210,17 +210,22 @@ class Libretro {
 			sensor_get_input_t get_sensor_input;
 		}
 		
-// typedef bool (*retro_camera_start_t)(void);
-// 
-// typedef void (*retro_camera_stop_t)(void);
-// 
-// typedef void (*retro_camera_lifetime_status_t)(void);
-// 
-// typedef void (*retro_camera_frame_raw_framebuffer_t)(const uint32_t *buffer, 
-//       unsigned width, unsigned height, size_t pitch);
-// 
-// typedef void (*retro_camera_frame_opengl_texture_t)(unsigned texture_id, 
-//       unsigned texture_target, const float *affine);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool camera_start_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool camera_stop_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void camera_lifetime_status_t();
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void camera_frame_raw_framebuffer_t(IntPtr buffer, uint width, uint height, UIntPtr pitch);
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void camera_frame_opengl_texture_t(uint width, uint height, IntPtr affine);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct camera_callback
@@ -228,12 +233,12 @@ class Libretro {
 			public ulong caps;
 			public uint width;
 			public uint height;
-//    retro_camera_start_t start;
-//    retro_camera_stop_t stop;
-//    retro_camera_frame_raw_framebuffer_t frame_raw_framebuffer;
-//    retro_camera_frame_opengl_texture_t frame_opengl_texture;
-//    retro_camera_lifetime_status_t initialized;
-//    retro_camera_lifetime_status_t deinitialized;
+			camera_start_t start;
+			camera_stop_t stop;
+			camera_frame_raw_framebuffer_t frame_raw_framebuffer;
+			camera_frame_opengl_texture_t frame_opengl_texture;
+			camera_lifetime_status_t initialized;
+			camera_lifetime_status_t deinitialized;
 		}
 		
 // typedef void (*retro_location_set_interval_t)(unsigned interval_ms,
@@ -522,32 +527,32 @@ class Libretro {
 	
 	
 	
-	public const uint DEVICE_TYPE_SHIFT = 8;
-	public const uint DEVICE_MASK = ((1 << (int)DEVICE_TYPE_SHIFT) - 1);
-	public static uint DEVICE_SUBCLASS(uint base_, uint id)
+	public const uint DeviceTypeShift = 8;
+	public const uint DeviceMask = ((1 << (int)DeviceTypeShift) - 1);
+	public static uint DeviceSubclass(uint base_, uint id)
 	{
-		return (((id + 1) << (int)DEVICE_TYPE_SHIFT) | base_);
+		return (((id + 1) << (int)DeviceTypeShift) | base_);
 	}
 	
 	public enum Device {
-		NONE,
-		JOYPAD,
-		MOUSE,
-		KEYBOARD,
-		LIGHTGUN,
-		ANALOG,
-		POINTER
+		None,
+		Joypad,
+		Mouse,
+		Keyboard,
+		Lightgun,
+		Analog,
+		Pointer
 	}
 	
 	public enum DevJoypad {
 		B,
 		Y,
-		SELECT,
-		START,
-		UP,
-		DOWN,
-		LEFT,
-		RIGHT,
+		Select,
+		Start,
+		Up,
+		Down,
+		Left,
+		Right,
 		A,
 		X,
 		L,
@@ -559,8 +564,8 @@ class Libretro {
 	}
 	
 	public enum DevAnalogIndex {
-		LEFT,
-		RIGHT
+		Left,
+		Right
 	}
 	public enum DevAnalog {
 		X,
@@ -570,27 +575,27 @@ class Libretro {
 	public enum DevMouse {
 		X,
 		Y,
-		LEFT,
-		RIGHT,
-		WHEELUP,
-		WHEELDOWN,
-		MIDDLE
+		Left,
+		Right,
+		WheelUp,
+		WheelDown,
+		Middle
 	}
 	
 	public enum DevLightgun {
 		X,
 		Y,
-		TRIGGER,
-		CURSOR,
-		TURBO,
-		PAUSE,
-		START
+		Trigger,
+		Cursor,
+		Turbo,
+		Pause,
+		Start
 	}
 	
 	public enum DevPointer {
 		X,
 		Y,
-		PRESSED
+		Pressed
 	}
 	
 	public enum Region {
@@ -599,27 +604,28 @@ class Libretro {
 	}
 	
 	public enum Language {
-		ENGLISH,
-		JAPANESE,
-		FRENCH,
-		SPANISH,
-		GERMAN,
-		ITALIAN,
-		DUTCH,
-		PORTUGUESE,
-		RUSSIAN,
-		KOREAN,
-		CHINESE_TRADITIONAL,
-		CHINESE_SIMPLIFIED,
-		LAST
+		English,
+		Japanese,
+		French,
+		Spanish,
+		German,
+		Italian,
+		Dutch,
+		Portugese,
+		Russian,
+		Korean,
+		ChineseTraditional,
+		ChineseSimplified,
+		Last
 	}
 	
-	public const int MEMORY_MASK = 0xff;
 	public enum MemType {
-		SAVE_RAM,
+		SaveRAM,
 		RTC,
-		SYSTEM_RAM,
-		VIDEO_RAM
+		SystemRAM,
+		VideoRAM,
+		
+		Mask = 0xFF
 	}
 	
 	public enum Key
@@ -771,22 +777,22 @@ class Libretro {
 	}
 	
 	public enum KeyMod {
-		NONE       = 0x0000,
+		None       = 0x0000,
 		
-		SHIFT      = 0x01,
-		CTRL       = 0x02,
-		ALT        = 0x04,
-		META       = 0x08,
+		Shift      = 0x01,
+		Ctrl       = 0x02,
+		Alt        = 0x04,
+		Meta       = 0x08,
 		
-		NUMLOCK    = 0x10,
-		CAPSLOCK   = 0x20,
-		SCROLLOCK  = 0x40,
+		NumLock    = 0x10,
+		CapsLock   = 0x20,
+		ScrolLock  = 0x40,
 	}
 	
-	public const int ENVIRONMENT_EXPERIMENTAL = 0x10000;
-	public const int ENVIRONMENT_PRIVATE = 0x20000;
-	
 	public enum Environment {
+		Experimental = 0x10000,
+		Private = 0x20000,
+		
 		SET_ROTATION = 1,
 		GET_OVERSCAN = 2,
 		GET_CAN_DUPE = 3,
@@ -808,8 +814,8 @@ class Libretro {
 		SET_FRAME_TIME_CALLBACK = 21,
 		GET_RUMBLE_INTERFACE = 23,
 		GET_INPUT_DEVICE_CAPABILITIES = 24,
-		GET_SENSOR_INTERFACE = (25 | ENVIRONMENT_EXPERIMENTAL),
-		GET_CAMERA_INTERFACE = (26 | ENVIRONMENT_EXPERIMENTAL),
+		GET_SENSOR_INTERFACE = (25 | Experimental),
+		GET_CAMERA_INTERFACE = (26 | Experimental),
 		GET_LOG_INTERFACE = 27,
 		GET_PERF_INTERFACE = 28,
 		GET_LOCATION_INTERFACE = 29,
@@ -819,7 +825,7 @@ class Libretro {
 		SET_PROC_ADDRESS_CALLBACK = 33,
 		SET_SUBSYSTEM_INFO = 34,
 		SET_CONTROLLER_INFO = 35,
-		SET_MEMORY_MAPS = (36 | ENVIRONMENT_EXPERIMENTAL),
+		SET_MEMORY_MAPS = (36 | Experimental),
 		SET_GEOMETRY = 37,
 		GET_USERNAME = 38,
 		GET_LANGUAGE = 39
@@ -862,16 +868,18 @@ class Libretro {
 // #define RETRO_ENVIRONMENT_GET_USERNAME 38  /* const char **
 // #define RETRO_ENVIRONMENT_GET_LANGUAGE 39 /* unsigned * --
 	
-	public const int MEMDESC_CONST     = (1 << 0);
-	public const int MEMDESC_BIGENDIAN = (1 << 1);
-	public const int MEMDESC_ALIGN_2   = (1 << 16);
-	public const int MEMDESC_ALIGN_4   = (2 << 16);
-	public const int MEMDESC_ALIGN_8   = (3 << 16);
-	public const int MEMDESC_MINSIZE_2 = (1 << 24);
-	public const int MEMDESC_MINSIZE_4 = (2 << 24);
-	public const int MEMDESC_MINSIZE_8 = (3 << 24);
+	public enum MemDesc {
+		CONST     = (1 << 0),
+		BIGENDIAN = (1 << 1),
+		ALIGN_2   = (1 << 16),
+		ALIGN_4   = (2 << 16),
+		ALIGN_8   = (3 << 16),
+		MINSIZE_2 = (1 << 24),
+		MINSIZE_4 = (2 << 24),
+		MINSIZE_8 = (3 << 24)
+	}
 	
-	public enum log_level {
+	public enum LogLevel {
 		DEBUG,
 		INFO,
 		WARN,
@@ -955,9 +963,9 @@ class Libretro {
 	bool env(uint cmd, IntPtr data)
 	{
 		System.Console.WriteLine("Env "+cmd);
-		switch (cmd)
+		switch ((Environment)cmd)
 		{
-			case Raw.ENVIRONMENT_GET_LOG_INTERFACE:
+			case Environment.GET_LOG_INTERFACE:
 			{
 				Raw.log_callback log = new Raw.log_callback();
 				log.log = log_printf_cb;
@@ -974,7 +982,7 @@ class Libretro {
 	                                    IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
 	                                    IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8);
 	
-	void log_printf_cb(Raw.log_level level, string fmt,
+	void log_printf_cb(int level, string fmt,
 	            IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr arg4,
 	            IntPtr arg5, IntPtr arg6, IntPtr arg7, IntPtr arg8)
 	{
@@ -993,10 +1001,10 @@ class Libretro {
 			break;
 		} while (sb.Length >= sb.Capacity);
 		
-		log_cb(level, sb.ToString());
+		log_cb((LogLevel)level, sb.ToString());
 	}
 	
-	public delegate void log_cb_t(Raw.log_level level, string text);
+	public delegate void log_cb_t(LogLevel level, string text);
 	log_cb_t log_cb;
 }
 
@@ -1009,7 +1017,7 @@ class TinyGUI
 		core.init();
 	}
 	
-	static void log(int level, string text)
+	static void log(Libretro.LogLevel level, string text)
 	{
 		System.Console.WriteLine("Log: "+text);
 	}
