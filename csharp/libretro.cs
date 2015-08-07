@@ -240,7 +240,7 @@ class Libretro {
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
-		public delegate bool load_game_t(out game_info game);
+		public delegate bool load_game_t(ref game_info game);
 		public load_game_t load_game;
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.U1)]
@@ -248,7 +248,7 @@ class Libretro {
 		public load_game_special_t load_game_special;
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void unload_game_t(out system_info info);
+		public delegate void unload_game_t(ref system_info info);
 		public unload_game_t unload_game;
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -1117,61 +1117,97 @@ class Libretro {
 		raw.get_system_info(out info);
 		return info;
 	}
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void get_system_info_t(out system_info info);
-		//public get_system_info_t get_system_info;
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void get_system_av_info_t(out system_av_info info);
-		//public get_system_av_info_t get_system_av_info;
-		//
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void set_controller_port_device_t(uint port, uint device);
-		//public set_controller_port_device_t set_controller_port_device;
-		//
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void reset_t();
-		//public reset_t reset;
-		//
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void run_t();
-		//public run_t run;
-		//
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate UIntPtr serialize_size_t();
-		//public serialize_size_t serialize_size;
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.U1)]
-		//public delegate bool serialize_t(IntPtr data, UIntPtr size);//uint8_t[]
-		//public serialize_t serialize;
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.U1)]
-		//public delegate bool unserialize_t(IntPtr data, UIntPtr size);//uint8_t[]
-		//public unserialize_t unserialize;
-		//
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void cheat_reset_t();
-		//public cheat_reset_t cheat_reset;
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		//public delegate void cheat_set_t(uint index, [MarshalAs(UnmanagedType.U1)] bool enabled, string code);
-		//public cheat_set_t cheat_set;
-		//
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.U1)]
-		//public delegate bool load_game_t(out game_info game);
-		//public load_game_t load_game;
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.U1)]
-		//public delegate bool load_game_special_t(uint game_type, IntPtr info, UIntPtr num_info);//retro_game_info[]
-		//public load_game_special_t load_game_special;
-		//
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void unload_game_t(out system_info info);
-		//public unload_game_t unload_game;
-		//
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate uint get_region_t();
-		//public get_region_t get_region;
-		//
+	public system_av_info get_system_av_info()
+	{
+		system_av_info info = new system_av_info();
+		raw.get_system_av_info(out info);
+		return info;
+	}
+	
+	public void set_controller_port_device_t(uint port, uint device)
+	{
+		raw.set_controller_port_device(port, device);
+	}
+	
+	public void reset()
+	{
+		raw.reset();
+	}
+	
+	public void run()
+	{
+		raw.run();
+	}
+	
+	public ulong serialize_size()
+	{
+		return raw.serialize_size().ToInt64();
+	}
+	
+	public void serialize(byte[] data)
+	{
+		ulong size = serialize_size();
+		if (size==0) throw new InvalidOperationException("Core does not support serialization");
+		
+		if (data.Length < serialize_size()) throw new ArgumentException("Too small buffer", "data");
+		
+		fixed (byte* p = buffer)
+		{
+			if (!raw.serialize((IntPtr)p))
+			{
+				throw new InvalidOperationException("Serialization failed");
+			}
+		}
+	}
+	
+	public byte[] serialize()
+	{
+		byte[] data = new byte[serialize_size()];
+		serialize(data);
+	}
+	
+	public void unserialize(byte[] data)
+	{
+		if (data.Length < serialize_size()) throw new ArgumentException("Too small buffer", "data");
+		
+		fixed (byte* p = buffer)
+		{
+			if (!raw.unserialize((IntPtr)p))
+			{
+				throw new InvalidOperationException("Unserialization failed");
+			}
+		}
+	}
+	
+	public void cheat_reset()
+	{
+		raw.cheat_reset();
+	}
+	public void cheat_set(uint index, bool enabled, string code)
+	{
+		raw.cheat_set(index, enabled, code);
+	}
+	
+	public void load_game(game_info game)
+	{
+		raw.load_game(ref game);
+	}
+	public void load_game_special(uint game_type, game_info[] info)
+	{
+		//TODO
+		throw new InvalidOperationException("Not implemented");
+	}
+	
+	public void unload_game()
+	{
+		raw.unload_game();
+	}
+	
+	public Region get_region()
+	{
+		return (Region)raw.get_region();
+	}
+	
 		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		//public delegate IntPtr get_memory_data_t(uint id);
 		//public get_memory_data_t get_memory_data;
