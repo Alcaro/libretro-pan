@@ -65,355 +65,6 @@ class Libretro {
 		
 		public const uint API_VERSION = 1;
 		
-		public const uint DEVICE_TYPE_SHIFT = 8;
-		public const uint DEVICE_MASK = ((1 << (int)DEVICE_TYPE_SHIFT) - 1);
-		public static uint DEVICE_SUBCLASS(uint base_, uint id)
-		{
-			return (((id + 1) << (int)DEVICE_TYPE_SHIFT) | base_);
-		}
-		
-		public enum Device {
-			NONE,
-			JOYPAD,
-			MOUSE,
-			KEYBOARD,
-			LIGHTGUN,
-			ANALOG,
-			POINTER
-		}
-		
-		public enum DevJoypad {
-			B,
-			Y,
-			SELECT,
-			START,
-			UP,
-			DOWN,
-			LEFT,
-			RIGHT,
-			A,
-			X,
-			L,
-			R,
-			L2,
-			R2,
-			L3,
-			R3
-		}
-		
-		public enum DevAnalogIndex {
-			LEFT,
-			RIGHT
-		}
-		public enum DevAnalog {
-			X,
-			Y
-		}
-		
-		public enum DevMouse {
-			X,
-			Y,
-			LEFT,
-			RIGHT,
-			WHEELUP,
-			WHEELDOWN,
-			MIDDLE
-		}
-		
-		public enum DevLightgun {
-			X,
-			Y,
-			TRIGGER,
-			CURSOR,
-			TURBO,
-			PAUSE,
-			START
-		}
-		
-		public enum DevPointer {
-			X,
-			Y,
-			PRESSED
-		}
-		
-		public enum Region {
-			NTSC,
-			PAL
-		}
-		
-		public enum Language {
-			ENGLISH,
-			JAPANESE,
-			FRENCH,
-			SPANISH,
-			GERMAN,
-			ITALIAN,
-			DUTCH,
-			PORTUGUESE,
-			RUSSIAN,
-			KOREAN,
-			CHINESE_TRADITIONAL,
-			CHINESE_SIMPLIFIED,
-			LAST
-		}
-		
-		public const int MEMORY_MASK = 0xff;
-		public enum MemType {
-			SAVE_RAM,
-			RTC,
-			SYSTEM_RAM,
-			VIDEO_RAM
-		}
-		
-		public enum Key
-		{
-			UNKNOWN        = 0,
-			FIRST          = 0,
-			BACKSPACE      = 8,
-			TAB            = 9,
-			CLEAR          = 12,
-			RETURN         = 13,
-			PAUSE          = 19,
-			ESCAPE         = 27,
-			SPACE          = 32,
-			EXCLAIM        = 33,
-			QUOTEDBL       = 34,
-			HASH           = 35,
-			DOLLAR         = 36,
-			AMPERSAND      = 38,
-			QUOTE          = 39,
-			LEFTPAREN      = 40,
-			RIGHTPAREN     = 41,
-			ASTERISK       = 42,
-			PLUS           = 43,
-			COMMA          = 44,
-			MINUS          = 45,
-			PERIOD         = 46,
-			SLASH          = 47,
-			_0             = 48,
-			_1             = 49,
-			_2             = 50,
-			_3             = 51,
-			_4             = 52,
-			_5             = 53,
-			_6             = 54,
-			_7             = 55,
-			_8             = 56,
-			_9             = 57,
-			COLON          = 58,
-			SEMICOLON      = 59,
-			LESS           = 60,
-			EQUALS         = 61,
-			GREATER        = 62,
-			QUESTION       = 63,
-			AT             = 64,
-			LEFTBRACKET    = 91,
-			BACKSLASH      = 92,
-			RIGHTBRACKET   = 93,
-			CARET          = 94,
-			UNDERSCORE     = 95,
-			BACKQUOTE      = 96,
-			a              = 97,
-			b              = 98,
-			c              = 99,
-			d              = 100,
-			e              = 101,
-			f              = 102,
-			g              = 103,
-			h              = 104,
-			i              = 105,
-			j              = 106,
-			k              = 107,
-			l              = 108,
-			m              = 109,
-			n              = 110,
-			o              = 111,
-			p              = 112,
-			q              = 113,
-			r              = 114,
-			s              = 115,
-			t              = 116,
-			u              = 117,
-			v              = 118,
-			w              = 119,
-			x              = 120,
-			y              = 121,
-			z              = 122,
-			DELETE         = 127,
-			
-			KP0            = 256,
-			KP1            = 257,
-			KP2            = 258,
-			KP3            = 259,
-			KP4            = 260,
-			KP5            = 261,
-			KP6            = 262,
-			KP7            = 263,
-			KP8            = 264,
-			KP9            = 265,
-			KP_PERIOD      = 266,
-			KP_DIVIDE      = 267,
-			KP_MULTIPLY    = 268,
-			KP_MINUS       = 269,
-			KP_PLUS        = 270,
-			KP_ENTER       = 271,
-			KP_EQUALS      = 272,
-			
-			UP             = 273,
-			DOWN           = 274,
-			RIGHT          = 275,
-			LEFT           = 276,
-			INSERT         = 277,
-			HOME           = 278,
-			END            = 279,
-			PAGEUP         = 280,
-			PAGEDOWN       = 281,
-			
-			F1             = 282,
-			F2             = 283,
-			F3             = 284,
-			F4             = 285,
-			F5             = 286,
-			F6             = 287,
-			F7             = 288,
-			F8             = 289,
-			F9             = 290,
-			F10            = 291,
-			F11            = 292,
-			F12            = 293,
-			F13            = 294,
-			F14            = 295,
-			F15            = 296,
-			
-			NUMLOCK        = 300,
-			CAPSLOCK       = 301,
-			SCROLLOCK      = 302,
-			RSHIFT         = 303,
-			LSHIFT         = 304,
-			RCTRL          = 305,
-			LCTRL          = 306,
-			RALT           = 307,
-			LALT           = 308,
-			RMETA          = 309,
-			LMETA          = 310,
-			LSUPER         = 311,
-			RSUPER         = 312,
-			MODE           = 313,
-			COMPOSE        = 314,
-			
-			HELP           = 315,
-			PRINT          = 316,
-			SYSREQ         = 317,
-			BREAK          = 318,
-			MENU           = 319,
-			POWER          = 320,
-			EURO           = 321,
-			UNDO           = 322,
-			
-			LAST
-		}
-		
-		public enum KeyMod {
-			NONE       = 0x0000,
-			
-			SHIFT      = 0x01,
-			CTRL       = 0x02,
-			ALT        = 0x04,
-			META       = 0x08,
-			
-			NUMLOCK    = 0x10,
-			CAPSLOCK   = 0x20,
-			SCROLLOCK  = 0x40,
-		}
-		
-		public const int ENVIRONMENT_EXPERIMENTAL = 0x10000;
-		public const int ENVIRONMENT_PRIVATE = 0x20000;
-		
-		public enum Environment {
-			SET_ROTATION = 1,
-			GET_OVERSCAN = 2,
-			GET_CAN_DUPE = 3,
-			SET_MESSAGE  = 6,
-			SHUTDOWN     = 7,
-			SET_PERFORMANCE_LEVEL = 8,
-			GET_SYSTEM_DIRECTORY = 9,
-			SET_PIXEL_FORMAT = 10,
-			SET_INPUT_DESCRIPTORS = 11,
-			SET_KEYBOARD_CALLBACK = 12,
-			SET_DISK_CONTROL_INTERFACE = 13,
-			SET_HW_RENDER = 14,
-			GET_VARIABLE = 15,
-			SET_VARIABLES = 16,
-			GET_VARIABLE_UPDATE = 17,
-			SET_SUPPORT_NO_GAME = 18,
-			GET_LIBRETRO_PATH = 19,
-			SET_AUDIO_CALLBACK = 22,
-			SET_FRAME_TIME_CALLBACK = 21,
-			GET_RUMBLE_INTERFACE = 23,
-			GET_INPUT_DEVICE_CAPABILITIES = 24,
-			GET_SENSOR_INTERFACE = (25 | ENVIRONMENT_EXPERIMENTAL),
-			GET_CAMERA_INTERFACE = (26 | ENVIRONMENT_EXPERIMENTAL),
-			GET_LOG_INTERFACE = 27,
-			GET_PERF_INTERFACE = 28,
-			GET_LOCATION_INTERFACE = 29,
-			GET_CONTENT_DIRECTORY = 30,
-			GET_SAVE_DIRECTORY = 31,
-			SET_SYSTEM_AV_INFO = 32,
-			SET_PROC_ADDRESS_CALLBACK = 33,
-			SET_SUBSYSTEM_INFO = 34,
-			SET_CONTROLLER_INFO = 35,
-			SET_MEMORY_MAPS = (36 | ENVIRONMENT_EXPERIMENTAL),
-			SET_GEOMETRY = 37,
-			GET_USERNAME = 38,
-			GET_LANGUAGE = 39
-		}
-		
-// #define RETRO_ENVIRONMENT_SET_ROTATION  1  /* const unsigned * --
-// #define RETRO_ENVIRONMENT_GET_OVERSCAN  2  /* bool * --
-// #define RETRO_ENVIRONMENT_GET_CAN_DUPE  3  /* bool * --
-// #define RETRO_ENVIRONMENT_SET_MESSAGE   6  /* const struct retro_message * --
-// #define RETRO_ENVIRONMENT_SHUTDOWN      7  /* N/A (NULL) --
-// #define RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL 8 /* const unsigned * --
-// #define RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY 9 /* const char ** --
-// #define RETRO_ENVIRONMENT_SET_PIXEL_FORMAT 10 /* const enum retro_pixel_format * --
-// #define RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS 11 /* const struct retro_input_descriptor * --
-// #define RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK 12 /* const struct retro_keyboard_callback * --
-// #define RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE 13 /* const struct retro_disk_control_callback * --
-// #define RETRO_ENVIRONMENT_SET_HW_RENDER 14 /* struct retro_hw_render_callback * --
-// #define RETRO_ENVIRONMENT_GET_VARIABLE 15 /* struct retro_variable * --
-// #define RETRO_ENVIRONMENT_SET_VARIABLES 16 /* const struct retro_variable * --
-// #define RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE 17 /* bool * --
-// #define RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME 18 /* const bool * --
-// #define RETRO_ENVIRONMENT_GET_LIBRETRO_PATH 19 /* const char ** --
-// #define RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK 22 /* const struct retro_audio_callback * --
-// #define RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK 21 /* const struct retro_frame_time_callback * --
-// #define RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE 23 /* struct retro_rumble_interface * --
-// #define RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES 24 /* uint64_t * --
-// #define RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE 25 /* struct retro_sensor_interface * --
-// #define RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE 26 /* struct retro_camera_callback * --
-// #define RETRO_ENVIRONMENT_GET_LOG_INTERFACE 27 /* struct retro_log_callback * --
-// #define RETRO_ENVIRONMENT_GET_PERF_INTERFACE 28 /* struct retro_perf_callback * --
-// #define RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE 29 /* struct retro_location_callback * --
-// #define RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY 30 /* const char ** --
-// #define RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY 31 /* const char ** --
-// #define RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO 32 /* const struct retro_system_av_info * --
-// #define RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK 33 /* const struct retro_get_proc_address_interface * --
-// #define RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO 34 /* const struct retro_subsystem_info * --
-// #define RETRO_ENVIRONMENT_SET_CONTROLLER_INFO 35 /* const struct retro_controller_info * --
-// #define RETRO_ENVIRONMENT_SET_MEMORY_MAPS 36 /* const struct retro_memory_map * --
-// #define RETRO_ENVIRONMENT_SET_GEOMETRY 37 /* const struct retro_game_geometry * --
-// #define RETRO_ENVIRONMENT_GET_USERNAME 38  /* const char **
-// #define RETRO_ENVIRONMENT_GET_LANGUAGE 39 /* unsigned * --
-		
-		public const int MEMDESC_CONST     = (1 << 0);
-		public const int MEMDESC_BIGENDIAN = (1 << 1);
-		public const int MEMDESC_ALIGN_2   = (1 << 16);
-		public const int MEMDESC_ALIGN_4   = (2 << 16);
-		public const int MEMDESC_ALIGN_8   = (3 << 16);
-		public const int MEMDESC_MINSIZE_2 = (1 << 24);
-		public const int MEMDESC_MINSIZE_4 = (2 << 24);
-		public const int MEMDESC_MINSIZE_8 = (3 << 24);
-		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		public struct memory_descriptor
 		{
@@ -933,6 +584,355 @@ class Libretro {
 		public delegate UIntPtr get_memory_size_t(uint id);
 		public get_memory_size_t get_memory_size;
 	}
+	
+	public const uint DEVICE_TYPE_SHIFT = 8;
+	public const uint DEVICE_MASK = ((1 << (int)DEVICE_TYPE_SHIFT) - 1);
+	public static uint DEVICE_SUBCLASS(uint base_, uint id)
+	{
+		return (((id + 1) << (int)DEVICE_TYPE_SHIFT) | base_);
+	}
+	
+	public enum Device {
+		NONE,
+		JOYPAD,
+		MOUSE,
+		KEYBOARD,
+		LIGHTGUN,
+		ANALOG,
+		POINTER
+	}
+	
+	public enum DevJoypad {
+		B,
+		Y,
+		SELECT,
+		START,
+		UP,
+		DOWN,
+		LEFT,
+		RIGHT,
+		A,
+		X,
+		L,
+		R,
+		L2,
+		R2,
+		L3,
+		R3
+	}
+	
+	public enum DevAnalogIndex {
+		LEFT,
+		RIGHT
+	}
+	public enum DevAnalog {
+		X,
+		Y
+	}
+	
+	public enum DevMouse {
+		X,
+		Y,
+		LEFT,
+		RIGHT,
+		WHEELUP,
+		WHEELDOWN,
+		MIDDLE
+	}
+	
+	public enum DevLightgun {
+		X,
+		Y,
+		TRIGGER,
+		CURSOR,
+		TURBO,
+		PAUSE,
+		START
+	}
+	
+	public enum DevPointer {
+		X,
+		Y,
+		PRESSED
+	}
+	
+	public enum Region {
+		NTSC,
+		PAL
+	}
+	
+	public enum Language {
+		ENGLISH,
+		JAPANESE,
+		FRENCH,
+		SPANISH,
+		GERMAN,
+		ITALIAN,
+		DUTCH,
+		PORTUGUESE,
+		RUSSIAN,
+		KOREAN,
+		CHINESE_TRADITIONAL,
+		CHINESE_SIMPLIFIED,
+		LAST
+	}
+	
+	public const int MEMORY_MASK = 0xff;
+	public enum MemType {
+		SAVE_RAM,
+		RTC,
+		SYSTEM_RAM,
+		VIDEO_RAM
+	}
+	
+	public enum Key
+	{
+		UNKNOWN        = 0,
+		FIRST          = 0,
+		BACKSPACE      = 8,
+		TAB            = 9,
+		CLEAR          = 12,
+		RETURN         = 13,
+		PAUSE          = 19,
+		ESCAPE         = 27,
+		SPACE          = 32,
+		EXCLAIM        = 33,
+		QUOTEDBL       = 34,
+		HASH           = 35,
+		DOLLAR         = 36,
+		AMPERSAND      = 38,
+		QUOTE          = 39,
+		LEFTPAREN      = 40,
+		RIGHTPAREN     = 41,
+		ASTERISK       = 42,
+		PLUS           = 43,
+		COMMA          = 44,
+		MINUS          = 45,
+		PERIOD         = 46,
+		SLASH          = 47,
+		_0             = 48,
+		_1             = 49,
+		_2             = 50,
+		_3             = 51,
+		_4             = 52,
+		_5             = 53,
+		_6             = 54,
+		_7             = 55,
+		_8             = 56,
+		_9             = 57,
+		COLON          = 58,
+		SEMICOLON      = 59,
+		LESS           = 60,
+		EQUALS         = 61,
+		GREATER        = 62,
+		QUESTION       = 63,
+		AT             = 64,
+		LEFTBRACKET    = 91,
+		BACKSLASH      = 92,
+		RIGHTBRACKET   = 93,
+		CARET          = 94,
+		UNDERSCORE     = 95,
+		BACKQUOTE      = 96,
+		a              = 97,
+		b              = 98,
+		c              = 99,
+		d              = 100,
+		e              = 101,
+		f              = 102,
+		g              = 103,
+		h              = 104,
+		i              = 105,
+		j              = 106,
+		k              = 107,
+		l              = 108,
+		m              = 109,
+		n              = 110,
+		o              = 111,
+		p              = 112,
+		q              = 113,
+		r              = 114,
+		s              = 115,
+		t              = 116,
+		u              = 117,
+		v              = 118,
+		w              = 119,
+		x              = 120,
+		y              = 121,
+		z              = 122,
+		DELETE         = 127,
+		
+		KP0            = 256,
+		KP1            = 257,
+		KP2            = 258,
+		KP3            = 259,
+		KP4            = 260,
+		KP5            = 261,
+		KP6            = 262,
+		KP7            = 263,
+		KP8            = 264,
+		KP9            = 265,
+		KP_PERIOD      = 266,
+		KP_DIVIDE      = 267,
+		KP_MULTIPLY    = 268,
+		KP_MINUS       = 269,
+		KP_PLUS        = 270,
+		KP_ENTER       = 271,
+		KP_EQUALS      = 272,
+		
+		UP             = 273,
+		DOWN           = 274,
+		RIGHT          = 275,
+		LEFT           = 276,
+		INSERT         = 277,
+		HOME           = 278,
+		END            = 279,
+		PAGEUP         = 280,
+		PAGEDOWN       = 281,
+		
+		F1             = 282,
+		F2             = 283,
+		F3             = 284,
+		F4             = 285,
+		F5             = 286,
+		F6             = 287,
+		F7             = 288,
+		F8             = 289,
+		F9             = 290,
+		F10            = 291,
+		F11            = 292,
+		F12            = 293,
+		F13            = 294,
+		F14            = 295,
+		F15            = 296,
+		
+		NUMLOCK        = 300,
+		CAPSLOCK       = 301,
+		SCROLLOCK      = 302,
+		RSHIFT         = 303,
+		LSHIFT         = 304,
+		RCTRL          = 305,
+		LCTRL          = 306,
+		RALT           = 307,
+		LALT           = 308,
+		RMETA          = 309,
+		LMETA          = 310,
+		LSUPER         = 311,
+		RSUPER         = 312,
+		MODE           = 313,
+		COMPOSE        = 314,
+		
+		HELP           = 315,
+		PRINT          = 316,
+		SYSREQ         = 317,
+		BREAK          = 318,
+		MENU           = 319,
+		POWER          = 320,
+		EURO           = 321,
+		UNDO           = 322,
+		
+		LAST
+	}
+	
+	public enum KeyMod {
+		NONE       = 0x0000,
+		
+		SHIFT      = 0x01,
+		CTRL       = 0x02,
+		ALT        = 0x04,
+		META       = 0x08,
+		
+		NUMLOCK    = 0x10,
+		CAPSLOCK   = 0x20,
+		SCROLLOCK  = 0x40,
+	}
+	
+	public const int ENVIRONMENT_EXPERIMENTAL = 0x10000;
+	public const int ENVIRONMENT_PRIVATE = 0x20000;
+	
+	public enum Environment {
+		SET_ROTATION = 1,
+		GET_OVERSCAN = 2,
+		GET_CAN_DUPE = 3,
+		SET_MESSAGE  = 6,
+		SHUTDOWN     = 7,
+		SET_PERFORMANCE_LEVEL = 8,
+		GET_SYSTEM_DIRECTORY = 9,
+		SET_PIXEL_FORMAT = 10,
+		SET_INPUT_DESCRIPTORS = 11,
+		SET_KEYBOARD_CALLBACK = 12,
+		SET_DISK_CONTROL_INTERFACE = 13,
+		SET_HW_RENDER = 14,
+		GET_VARIABLE = 15,
+		SET_VARIABLES = 16,
+		GET_VARIABLE_UPDATE = 17,
+		SET_SUPPORT_NO_GAME = 18,
+		GET_LIBRETRO_PATH = 19,
+		SET_AUDIO_CALLBACK = 22,
+		SET_FRAME_TIME_CALLBACK = 21,
+		GET_RUMBLE_INTERFACE = 23,
+		GET_INPUT_DEVICE_CAPABILITIES = 24,
+		GET_SENSOR_INTERFACE = (25 | ENVIRONMENT_EXPERIMENTAL),
+		GET_CAMERA_INTERFACE = (26 | ENVIRONMENT_EXPERIMENTAL),
+		GET_LOG_INTERFACE = 27,
+		GET_PERF_INTERFACE = 28,
+		GET_LOCATION_INTERFACE = 29,
+		GET_CONTENT_DIRECTORY = 30,
+		GET_SAVE_DIRECTORY = 31,
+		SET_SYSTEM_AV_INFO = 32,
+		SET_PROC_ADDRESS_CALLBACK = 33,
+		SET_SUBSYSTEM_INFO = 34,
+		SET_CONTROLLER_INFO = 35,
+		SET_MEMORY_MAPS = (36 | ENVIRONMENT_EXPERIMENTAL),
+		SET_GEOMETRY = 37,
+		GET_USERNAME = 38,
+		GET_LANGUAGE = 39
+	}
+	
+// #define RETRO_ENVIRONMENT_SET_ROTATION  1  /* const unsigned * --
+// #define RETRO_ENVIRONMENT_GET_OVERSCAN  2  /* bool * --
+// #define RETRO_ENVIRONMENT_GET_CAN_DUPE  3  /* bool * --
+// #define RETRO_ENVIRONMENT_SET_MESSAGE   6  /* const struct retro_message * --
+// #define RETRO_ENVIRONMENT_SHUTDOWN      7  /* N/A (NULL) --
+// #define RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL 8 /* const unsigned * --
+// #define RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY 9 /* const char ** --
+// #define RETRO_ENVIRONMENT_SET_PIXEL_FORMAT 10 /* const enum retro_pixel_format * --
+// #define RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS 11 /* const struct retro_input_descriptor * --
+// #define RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK 12 /* const struct retro_keyboard_callback * --
+// #define RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE 13 /* const struct retro_disk_control_callback * --
+// #define RETRO_ENVIRONMENT_SET_HW_RENDER 14 /* struct retro_hw_render_callback * --
+// #define RETRO_ENVIRONMENT_GET_VARIABLE 15 /* struct retro_variable * --
+// #define RETRO_ENVIRONMENT_SET_VARIABLES 16 /* const struct retro_variable * --
+// #define RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE 17 /* bool * --
+// #define RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME 18 /* const bool * --
+// #define RETRO_ENVIRONMENT_GET_LIBRETRO_PATH 19 /* const char ** --
+// #define RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK 22 /* const struct retro_audio_callback * --
+// #define RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK 21 /* const struct retro_frame_time_callback * --
+// #define RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE 23 /* struct retro_rumble_interface * --
+// #define RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES 24 /* uint64_t * --
+// #define RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE 25 /* struct retro_sensor_interface * --
+// #define RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE 26 /* struct retro_camera_callback * --
+// #define RETRO_ENVIRONMENT_GET_LOG_INTERFACE 27 /* struct retro_log_callback * --
+// #define RETRO_ENVIRONMENT_GET_PERF_INTERFACE 28 /* struct retro_perf_callback * --
+// #define RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE 29 /* struct retro_location_callback * --
+// #define RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY 30 /* const char ** --
+// #define RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY 31 /* const char ** --
+// #define RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO 32 /* const struct retro_system_av_info * --
+// #define RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK 33 /* const struct retro_get_proc_address_interface * --
+// #define RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO 34 /* const struct retro_subsystem_info * --
+// #define RETRO_ENVIRONMENT_SET_CONTROLLER_INFO 35 /* const struct retro_controller_info * --
+// #define RETRO_ENVIRONMENT_SET_MEMORY_MAPS 36 /* const struct retro_memory_map * --
+// #define RETRO_ENVIRONMENT_SET_GEOMETRY 37 /* const struct retro_game_geometry * --
+// #define RETRO_ENVIRONMENT_GET_USERNAME 38  /* const char **
+// #define RETRO_ENVIRONMENT_GET_LANGUAGE 39 /* unsigned * --
+	
+	public const int MEMDESC_CONST     = (1 << 0);
+	public const int MEMDESC_BIGENDIAN = (1 << 1);
+	public const int MEMDESC_ALIGN_2   = (1 << 16);
+	public const int MEMDESC_ALIGN_4   = (2 << 16);
+	public const int MEMDESC_ALIGN_8   = (3 << 16);
+	public const int MEMDESC_MINSIZE_2 = (1 << 24);
+	public const int MEMDESC_MINSIZE_4 = (2 << 24);
+	public const int MEMDESC_MINSIZE_8 = (3 << 24);
 	
 	Raw raw;
 	
