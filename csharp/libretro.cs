@@ -1,364 +1,441 @@
-//dynamic P/Invoke is ugly, requires LoadLibrary
-//see http://blogs.msdn.com/b/jonathanswift/archive/2006/10/03/dynamically-calling-an-unmanaged-dll-from-.net-_2800_c_23002900_.aspx
-
 using System;
 using System.Runtime.InteropServices;
-class LibretroRaw
-{
 
-// #define RETRO_API_VERSION         1
-// 
-// #define RETRO_DEVICE_TYPE_SHIFT         8
-// #define RETRO_DEVICE_MASK               ((1 << RETRO_DEVICE_TYPE_SHIFT) - 1)
-// #define RETRO_DEVICE_SUBCLASS(base, id) (((id + 1) << RETRO_DEVICE_TYPE_SHIFT) | base)
-// 
-// #define RETRO_DEVICE_NONE         0
-// #define RETRO_DEVICE_JOYPAD       1
-// #define RETRO_DEVICE_MOUSE        2
-// #define RETRO_DEVICE_KEYBOARD     3
-// #define RETRO_DEVICE_LIGHTGUN     4
-// #define RETRO_DEVICE_ANALOG       5
-// #define RETRO_DEVICE_POINTER      6
-// 
-// #define RETRO_DEVICE_ID_JOYPAD_B        0
-// #define RETRO_DEVICE_ID_JOYPAD_Y        1
-// #define RETRO_DEVICE_ID_JOYPAD_SELECT   2
-// #define RETRO_DEVICE_ID_JOYPAD_START    3
-// #define RETRO_DEVICE_ID_JOYPAD_UP       4
-// #define RETRO_DEVICE_ID_JOYPAD_DOWN     5
-// #define RETRO_DEVICE_ID_JOYPAD_LEFT     6
-// #define RETRO_DEVICE_ID_JOYPAD_RIGHT    7
-// #define RETRO_DEVICE_ID_JOYPAD_A        8
-// #define RETRO_DEVICE_ID_JOYPAD_X        9
-// #define RETRO_DEVICE_ID_JOYPAD_L       10
-// #define RETRO_DEVICE_ID_JOYPAD_R       11
-// #define RETRO_DEVICE_ID_JOYPAD_L2      12
-// #define RETRO_DEVICE_ID_JOYPAD_R2      13
-// #define RETRO_DEVICE_ID_JOYPAD_L3      14
-// #define RETRO_DEVICE_ID_JOYPAD_R3      15
-// 
-// #define RETRO_DEVICE_INDEX_ANALOG_LEFT   0
-// #define RETRO_DEVICE_INDEX_ANALOG_RIGHT  1
-// #define RETRO_DEVICE_ID_ANALOG_X         0
-// #define RETRO_DEVICE_ID_ANALOG_Y         1
-// 
-// #define RETRO_DEVICE_ID_MOUSE_X          0
-// #define RETRO_DEVICE_ID_MOUSE_Y          1
-// #define RETRO_DEVICE_ID_MOUSE_LEFT       2
-// #define RETRO_DEVICE_ID_MOUSE_RIGHT      3
-// #define RETRO_DEVICE_ID_MOUSE_WHEELUP    4
-// #define RETRO_DEVICE_ID_MOUSE_WHEELDOWN  5
-// #define RETRO_DEVICE_ID_MOUSE_MIDDLE     6
-// 
-// #define RETRO_DEVICE_ID_LIGHTGUN_X        0
-// #define RETRO_DEVICE_ID_LIGHTGUN_Y        1
-// #define RETRO_DEVICE_ID_LIGHTGUN_TRIGGER  2
-// #define RETRO_DEVICE_ID_LIGHTGUN_CURSOR   3
-// #define RETRO_DEVICE_ID_LIGHTGUN_TURBO    4
-// #define RETRO_DEVICE_ID_LIGHTGUN_PAUSE    5
-// #define RETRO_DEVICE_ID_LIGHTGUN_START    6
-// 
-// #define RETRO_DEVICE_ID_POINTER_X         0
-// #define RETRO_DEVICE_ID_POINTER_Y         1
-// #define RETRO_DEVICE_ID_POINTER_PRESSED   2
-// 
-// #define RETRO_REGION_NTSC  0
-// #define RETRO_REGION_PAL   1
-// 
-// enum retro_language
-// {
-//    RETRO_LANGUAGE_ENGLISH             =  0,
-//    RETRO_LANGUAGE_JAPANESE            =  1,
-//    RETRO_LANGUAGE_FRENCH              =  2,
-//    RETRO_LANGUAGE_SPANISH             =  3,
-//    RETRO_LANGUAGE_GERMAN              =  4,
-//    RETRO_LANGUAGE_ITALIAN             =  5,
-//    RETRO_LANGUAGE_DUTCH               =  6,
-//    RETRO_LANGUAGE_PORTUGUESE          =  7,
-//    RETRO_LANGUAGE_RUSSIAN             =  8,
-//    RETRO_LANGUAGE_KOREAN              =  9,
-//    RETRO_LANGUAGE_CHINESE_TRADITIONAL = 10,
-//    RETRO_LANGUAGE_CHINESE_SIMPLIFIED  = 11,
-//    RETRO_LANGUAGE_LAST,
-// 
-//    RETRO_LANGUAGE_DUMMY          = INT_MAX 
-// };
-// 
-// #define RETRO_MEMORY_MASK        0xff
-// #define RETRO_MEMORY_SAVE_RAM    0
-// #define RETRO_MEMORY_RTC         1
-// #define RETRO_MEMORY_SYSTEM_RAM  2
-// #define RETRO_MEMORY_VIDEO_RAM   3
-// 
-// enum retro_key
-// {
-//    RETROK_UNKNOWN        = 0,
-//    RETROK_FIRST          = 0,
-//    RETROK_BACKSPACE      = 8,
-//    RETROK_TAB            = 9,
-//    RETROK_CLEAR          = 12,
-//    RETROK_RETURN         = 13,
-//    RETROK_PAUSE          = 19,
-//    RETROK_ESCAPE         = 27,
-//    RETROK_SPACE          = 32,
-//    RETROK_EXCLAIM        = 33,
-//    RETROK_QUOTEDBL       = 34,
-//    RETROK_HASH           = 35,
-//    RETROK_DOLLAR         = 36,
-//    RETROK_AMPERSAND      = 38,
-//    RETROK_QUOTE          = 39,
-//    RETROK_LEFTPAREN      = 40,
-//    RETROK_RIGHTPAREN     = 41,
-//    RETROK_ASTERISK       = 42,
-//    RETROK_PLUS           = 43,
-//    RETROK_COMMA          = 44,
-//    RETROK_MINUS          = 45,
-//    RETROK_PERIOD         = 46,
-//    RETROK_SLASH          = 47,
-//    RETROK_0              = 48,
-//    RETROK_1              = 49,
-//    RETROK_2              = 50,
-//    RETROK_3              = 51,
-//    RETROK_4              = 52,
-//    RETROK_5              = 53,
-//    RETROK_6              = 54,
-//    RETROK_7              = 55,
-//    RETROK_8              = 56,
-//    RETROK_9              = 57,
-//    RETROK_COLON          = 58,
-//    RETROK_SEMICOLON      = 59,
-//    RETROK_LESS           = 60,
-//    RETROK_EQUALS         = 61,
-//    RETROK_GREATER        = 62,
-//    RETROK_QUESTION       = 63,
-//    RETROK_AT             = 64,
-//    RETROK_LEFTBRACKET    = 91,
-//    RETROK_BACKSLASH      = 92,
-//    RETROK_RIGHTBRACKET   = 93,
-//    RETROK_CARET          = 94,
-//    RETROK_UNDERSCORE     = 95,
-//    RETROK_BACKQUOTE      = 96,
-//    RETROK_a              = 97,
-//    RETROK_b              = 98,
-//    RETROK_c              = 99,
-//    RETROK_d              = 100,
-//    RETROK_e              = 101,
-//    RETROK_f              = 102,
-//    RETROK_g              = 103,
-//    RETROK_h              = 104,
-//    RETROK_i              = 105,
-//    RETROK_j              = 106,
-//    RETROK_k              = 107,
-//    RETROK_l              = 108,
-//    RETROK_m              = 109,
-//    RETROK_n              = 110,
-//    RETROK_o              = 111,
-//    RETROK_p              = 112,
-//    RETROK_q              = 113,
-//    RETROK_r              = 114,
-//    RETROK_s              = 115,
-//    RETROK_t              = 116,
-//    RETROK_u              = 117,
-//    RETROK_v              = 118,
-//    RETROK_w              = 119,
-//    RETROK_x              = 120,
-//    RETROK_y              = 121,
-//    RETROK_z              = 122,
-//    RETROK_DELETE         = 127,
-// 
-//    RETROK_KP0            = 256,
-//    RETROK_KP1            = 257,
-//    RETROK_KP2            = 258,
-//    RETROK_KP3            = 259,
-//    RETROK_KP4            = 260,
-//    RETROK_KP5            = 261,
-//    RETROK_KP6            = 262,
-//    RETROK_KP7            = 263,
-//    RETROK_KP8            = 264,
-//    RETROK_KP9            = 265,
-//    RETROK_KP_PERIOD      = 266,
-//    RETROK_KP_DIVIDE      = 267,
-//    RETROK_KP_MULTIPLY    = 268,
-//    RETROK_KP_MINUS       = 269,
-//    RETROK_KP_PLUS        = 270,
-//    RETROK_KP_ENTER       = 271,
-//    RETROK_KP_EQUALS      = 272,
-// 
-//    RETROK_UP             = 273,
-//    RETROK_DOWN           = 274,
-//    RETROK_RIGHT          = 275,
-//    RETROK_LEFT           = 276,
-//    RETROK_INSERT         = 277,
-//    RETROK_HOME           = 278,
-//    RETROK_END            = 279,
-//    RETROK_PAGEUP         = 280,
-//    RETROK_PAGEDOWN       = 281,
-// 
-//    RETROK_F1             = 282,
-//    RETROK_F2             = 283,
-//    RETROK_F3             = 284,
-//    RETROK_F4             = 285,
-//    RETROK_F5             = 286,
-//    RETROK_F6             = 287,
-//    RETROK_F7             = 288,
-//    RETROK_F8             = 289,
-//    RETROK_F9             = 290,
-//    RETROK_F10            = 291,
-//    RETROK_F11            = 292,
-//    RETROK_F12            = 293,
-//    RETROK_F13            = 294,
-//    RETROK_F14            = 295,
-//    RETROK_F15            = 296,
-// 
-//    RETROK_NUMLOCK        = 300,
-//    RETROK_CAPSLOCK       = 301,
-//    RETROK_SCROLLOCK      = 302,
-//    RETROK_RSHIFT         = 303,
-//    RETROK_LSHIFT         = 304,
-//    RETROK_RCTRL          = 305,
-//    RETROK_LCTRL          = 306,
-//    RETROK_RALT           = 307,
-//    RETROK_LALT           = 308,
-//    RETROK_RMETA          = 309,
-//    RETROK_LMETA          = 310,
-//    RETROK_LSUPER         = 311,
-//    RETROK_RSUPER         = 312,
-//    RETROK_MODE           = 313,
-//    RETROK_COMPOSE        = 314,
-// 
-//    RETROK_HELP           = 315,
-//    RETROK_PRINT          = 316,
-//    RETROK_SYSREQ         = 317,
-//    RETROK_BREAK          = 318,
-//    RETROK_MENU           = 319,
-//    RETROK_POWER          = 320,
-//    RETROK_EURO           = 321,
-//    RETROK_UNDO           = 322,
-// 
-//    RETROK_LAST,
-// 
-//    RETROK_DUMMY          = INT_MAX /* Ensure sizeof(enum) == sizeof(int) */
-// };
-// 
-// enum retro_mod
-// {
-//    RETROKMOD_NONE       = 0x0000,
-// 
-//    RETROKMOD_SHIFT      = 0x01,
-//    RETROKMOD_CTRL       = 0x02,
-//    RETROKMOD_ALT        = 0x04,
-//    RETROKMOD_META       = 0x08,
-// 
-//    RETROKMOD_NUMLOCK    = 0x10,
-//    RETROKMOD_CAPSLOCK   = 0x20,
-//    RETROKMOD_SCROLLOCK  = 0x40,
-// 
-//    RETROKMOD_DUMMY = INT_MAX /* Ensure sizeof(enum) == sizeof(int) */
-// };
-// 
-// #define RETRO_ENVIRONMENT_EXPERIMENTAL 0x10000
-// #define RETRO_ENVIRONMENT_PRIVATE 0x20000
-// 
+class Libretro {
+	class Raw
+	{
+		static class Kernel32
+		{
+			[DllImport("kernel32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+			public static extern IntPtr LoadLibrary(string dllToLoad);
+			
+			[DllImport("kernel32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+			public static extern IntPtr GetProcAddress(IntPtr hModule, string procedureName);
+			
+			[DllImport("kernel32.dll", CallingConvention = CallingConvention.StdCall)]
+			[return: MarshalAs(UnmanagedType.U1)]
+			public static extern bool FreeLibrary(IntPtr hModule);
+		}
+		IntPtr DllHandle;
+		
+		private Delegate LoadFromDLL(string name, Type type)
+		{
+			IntPtr func = Kernel32.GetProcAddress(DllHandle, name);
+			if (func == IntPtr.Zero) throw new ArgumentException("The given DLL is not a libretro core");
+			return Marshal.GetDelegateForFunctionPointer(func, type);
+		}
+		
+		public Raw(string dll)
+		{
+			DllHandle = Kernel32.LoadLibrary(dll);
+			if (DllHandle == IntPtr.Zero) Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+			
+			set_environment = (set_environment_t)LoadFromDLL("retro_set_environment", typeof(set_environment_t));
+			set_audio_sample = (set_audio_sample_t)LoadFromDLL("retro_set_audio_sample", typeof(set_audio_sample_t));
+			set_audio_sample_batch = (set_audio_sample_batch_t)LoadFromDLL("retro_set_audio_sample_batch", typeof(set_audio_sample_batch_t));
+			set_input_poll = (set_input_poll_t)LoadFromDLL("retro_set_input_poll", typeof(set_input_poll_t));
+			set_input_state = (set_input_state_t)LoadFromDLL("retro_set_input_state", typeof(set_input_state_t));
+			init = (init_t)LoadFromDLL("retro_init", typeof(init_t));
+			deinit = (deinit_t)LoadFromDLL("retro_deinit", typeof(deinit_t));
+			api_version = (api_version_t)LoadFromDLL("retro_api_version", typeof(api_version_t));
+			get_system_info = (get_system_info_t)LoadFromDLL("retro_get_system_info", typeof(get_system_info_t));
+			get_system_av_info = (get_system_av_info_t)LoadFromDLL("retro_get_system_av_info", typeof(get_system_av_info_t));
+			set_controller_port_device = (set_controller_port_device_t)LoadFromDLL("retro_set_controller_port_device", typeof(set_controller_port_device_t));
+			reset = (reset_t)LoadFromDLL("retro_reset", typeof(reset_t));
+			run = (run_t)LoadFromDLL("retro_run", typeof(run_t));
+			serialize_size = (serialize_size_t)LoadFromDLL("retro_serialize_size", typeof(serialize_size_t));
+			serialize = (serialize_t)LoadFromDLL("retro_serialize", typeof(serialize_t));
+			unserialize = (unserialize_t)LoadFromDLL("retro_unserialize", typeof(unserialize_t));
+			cheat_reset = (cheat_reset_t)LoadFromDLL("retro_cheat_reset", typeof(cheat_reset_t));
+			cheat_set = (cheat_set_t)LoadFromDLL("retro_cheat_set", typeof(cheat_set_t));
+			load_game = (load_game_t)LoadFromDLL("retro_load_game", typeof(load_game_t));
+			load_game_special = (load_game_special_t)LoadFromDLL("retro_load_game_special", typeof(load_game_special_t));
+			unload_game = (unload_game_t)LoadFromDLL("retro_unload_game", typeof(unload_game_t));
+			get_region = (get_region_t)LoadFromDLL("retro_get_region", typeof(get_region_t));
+			get_memory_data = (get_memory_data_t)LoadFromDLL("retro_get_memory_data", typeof(get_memory_data_t));
+			get_memory_size = (get_memory_size_t)LoadFromDLL("retro_get_memory_size", typeof(get_memory_size_t));
+			
+			if (api_version() != API_VERSION)
+			{
+				throw new ArgumentException("The given DLL uses wrong version of libretro", "dll");
+			}
+		}
+		
+		public const int API_VERSION = 1;
+		
+		public const int DEVICE_TYPE_SHIFT = 8;
+		public const int DEVICE_MASK = ((1 << DEVICE_TYPE_SHIFT) - 1);
+		public static int DEVICE_SUBCLASS(int base_, int id)
+		{
+			return (((id + 1) << DEVICE_TYPE_SHIFT) | base_);
+		}
+		
+		public enum Device {
+			NONE,
+			JOYPAD,
+			MOUSE,
+			KEYBOARD,
+			LIGHTGUN,
+			ANALOG,
+			POINTER
+		}
+		
+		public enum DevJoypad {
+			B,
+			Y,
+			SELECT,
+			START,
+			UP,
+			DOWN,
+			LEFT,
+			RIGHT,
+			A,
+			X,
+			L,
+			R,
+			L2,
+			R2,
+			L3,
+			R3
+		}
+		
+		public enum DevAnalogIndex {
+			LEFT,
+			RIGHT
+		}
+		public enum DevAnalog {
+			X,
+			Y
+		}
+		
+		public enum DevMouse {
+			X,
+			Y,
+			LEFT,
+			RIGHT,
+			WHEELUP,
+			WHEELDOWN,
+			MIDDLE
+		}
+		
+		public enum DevLightgun {
+			X,
+			Y,
+			TRIGGER,
+			CURSOR,
+			TURBO,
+			PAUSE,
+			START
+		}
+		
+		public enum DevPointer {
+			X,
+			Y,
+			PRESSED
+		}
+		
+		public enum Region {
+			NTSC,
+			PAL
+		}
+		
+		public enum Language {
+			ENGLISH,
+			JAPANESE,
+			FRENCH,
+			SPANISH,
+			GERMAN,
+			ITALIAN,
+			DUTCH,
+			PORTUGUESE,
+			RUSSIAN,
+			KOREAN,
+			CHINESE_TRADITIONAL,
+			CHINESE_SIMPLIFIED,
+			LAST
+		}
+		
+		public const int MEMORY_MASK = 0xff;
+		public enum MemType {
+			SAVE_RAM,
+			RTC,
+			SYSTEM_RAM,
+			VIDEO_RAM
+		}
+		
+		public enum Key
+		{
+			UNKNOWN        = 0,
+			FIRST          = 0,
+			BACKSPACE      = 8,
+			TAB            = 9,
+			CLEAR          = 12,
+			RETURN         = 13,
+			PAUSE          = 19,
+			ESCAPE         = 27,
+			SPACE          = 32,
+			EXCLAIM        = 33,
+			QUOTEDBL       = 34,
+			HASH           = 35,
+			DOLLAR         = 36,
+			AMPERSAND      = 38,
+			QUOTE          = 39,
+			LEFTPAREN      = 40,
+			RIGHTPAREN     = 41,
+			ASTERISK       = 42,
+			PLUS           = 43,
+			COMMA          = 44,
+			MINUS          = 45,
+			PERIOD         = 46,
+			SLASH          = 47,
+			_0             = 48,
+			_1             = 49,
+			_2             = 50,
+			_3             = 51,
+			_4             = 52,
+			_5             = 53,
+			_6             = 54,
+			_7             = 55,
+			_8             = 56,
+			_9             = 57,
+			COLON          = 58,
+			SEMICOLON      = 59,
+			LESS           = 60,
+			EQUALS         = 61,
+			GREATER        = 62,
+			QUESTION       = 63,
+			AT             = 64,
+			LEFTBRACKET    = 91,
+			BACKSLASH      = 92,
+			RIGHTBRACKET   = 93,
+			CARET          = 94,
+			UNDERSCORE     = 95,
+			BACKQUOTE      = 96,
+			a              = 97,
+			b              = 98,
+			c              = 99,
+			d              = 100,
+			e              = 101,
+			f              = 102,
+			g              = 103,
+			h              = 104,
+			i              = 105,
+			j              = 106,
+			k              = 107,
+			l              = 108,
+			m              = 109,
+			n              = 110,
+			o              = 111,
+			p              = 112,
+			q              = 113,
+			r              = 114,
+			s              = 115,
+			t              = 116,
+			u              = 117,
+			v              = 118,
+			w              = 119,
+			x              = 120,
+			y              = 121,
+			z              = 122,
+			DELETE         = 127,
+			
+			KP0            = 256,
+			KP1            = 257,
+			KP2            = 258,
+			KP3            = 259,
+			KP4            = 260,
+			KP5            = 261,
+			KP6            = 262,
+			KP7            = 263,
+			KP8            = 264,
+			KP9            = 265,
+			KP_PERIOD      = 266,
+			KP_DIVIDE      = 267,
+			KP_MULTIPLY    = 268,
+			KP_MINUS       = 269,
+			KP_PLUS        = 270,
+			KP_ENTER       = 271,
+			KP_EQUALS      = 272,
+			
+			UP             = 273,
+			DOWN           = 274,
+			RIGHT          = 275,
+			LEFT           = 276,
+			INSERT         = 277,
+			HOME           = 278,
+			END            = 279,
+			PAGEUP         = 280,
+			PAGEDOWN       = 281,
+			
+			F1             = 282,
+			F2             = 283,
+			F3             = 284,
+			F4             = 285,
+			F5             = 286,
+			F6             = 287,
+			F7             = 288,
+			F8             = 289,
+			F9             = 290,
+			F10            = 291,
+			F11            = 292,
+			F12            = 293,
+			F13            = 294,
+			F14            = 295,
+			F15            = 296,
+			
+			NUMLOCK        = 300,
+			CAPSLOCK       = 301,
+			SCROLLOCK      = 302,
+			RSHIFT         = 303,
+			LSHIFT         = 304,
+			RCTRL          = 305,
+			LCTRL          = 306,
+			RALT           = 307,
+			LALT           = 308,
+			RMETA          = 309,
+			LMETA          = 310,
+			LSUPER         = 311,
+			RSUPER         = 312,
+			MODE           = 313,
+			COMPOSE        = 314,
+			
+			HELP           = 315,
+			PRINT          = 316,
+			SYSREQ         = 317,
+			BREAK          = 318,
+			MENU           = 319,
+			POWER          = 320,
+			EURO           = 321,
+			UNDO           = 322,
+			
+			LAST
+		}
+		
+		public enum KeyMod {
+			NONE       = 0x0000,
+			
+			SHIFT      = 0x01,
+			CTRL       = 0x02,
+			ALT        = 0x04,
+			META       = 0x08,
+			
+			NUMLOCK    = 0x10,
+			CAPSLOCK   = 0x20,
+			SCROLLOCK  = 0x40,
+		}
+		
+		public const int ENVIRONMENT_EXPERIMENTAL = 0x10000;
+		public const int ENVIRONMENT_PRIVATE = 0x20000;
+		
+		public const int ENVIRONMENT_SET_ROTATION = 1;
+		public const int ENVIRONMENT_GET_OVERSCAN = 2;
+		public const int ENVIRONMENT_GET_CAN_DUPE = 3;
+		public const int ENVIRONMENT_SET_MESSAGE  = 6;
+		public const int ENVIRONMENT_SHUTDOWN     = 7;
+		public const int ENVIRONMENT_SET_PERFORMANCE_LEVEL = 8;
+		public const int ENVIRONMENT_GET_SYSTEM_DIRECTORY = 9;
+		public const int ENVIRONMENT_SET_PIXEL_FORMAT = 10;
+		public const int ENVIRONMENT_SET_INPUT_DESCRIPTORS = 11;
+		public const int ENVIRONMENT_SET_KEYBOARD_CALLBACK = 12;
+		public const int ENVIRONMENT_SET_DISK_CONTROL_INTERFACE = 13;
+		public const int ENVIRONMENT_SET_HW_RENDER = 14;
+		public const int ENVIRONMENT_GET_VARIABLE = 15;
+		public const int ENVIRONMENT_SET_VARIABLES = 16;
+		public const int ENVIRONMENT_GET_VARIABLE_UPDATE = 17;
+		public const int ENVIRONMENT_SET_SUPPORT_NO_GAME = 18;
+		public const int ENVIRONMENT_GET_LIBRETRO_PATH = 19;
+		public const int ENVIRONMENT_SET_AUDIO_CALLBACK = 22;
+		public const int ENVIRONMENT_SET_FRAME_TIME_CALLBACK = 21;
+		public const int ENVIRONMENT_GET_RUMBLE_INTERFACE = 23;
+		public const int ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES = 24;
+		public const int ENVIRONMENT_GET_SENSOR_INTERFACE = (25 | ENVIRONMENT_EXPERIMENTAL);
+		public const int ENVIRONMENT_GET_CAMERA_INTERFACE = (26 | ENVIRONMENT_EXPERIMENTAL);
+		public const int ENVIRONMENT_GET_LOG_INTERFACE = 27;
+		public const int ENVIRONMENT_GET_PERF_INTERFACE = 28;
+		public const int ENVIRONMENT_GET_LOCATION_INTERFACE = 29;
+		public const int ENVIRONMENT_GET_CONTENT_DIRECTORY = 30;
+		public const int ENVIRONMENT_GET_SAVE_DIRECTORY = 31;
+		public const int ENVIRONMENT_SET_SYSTEM_AV_INFO = 32;
+		public const int ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK = 33;
+		public const int ENVIRONMENT_SET_SUBSYSTEM_INFO = 34;
+		public const int ENVIRONMENT_SET_CONTROLLER_INFO = 35;
+		public const int ENVIRONMENT_SET_MEMORY_MAPS = (36 | ENVIRONMENT_EXPERIMENTAL);
+		public const int ENVIRONMENT_SET_GEOMETRY = 37;
+		public const int ENVIRONMENT_GET_USERNAME = 38;
+		public const int ENVIRONMENT_GET_LANGUAGE = 39;
+		
 // #define RETRO_ENVIRONMENT_SET_ROTATION  1  /* const unsigned * --
 // #define RETRO_ENVIRONMENT_GET_OVERSCAN  2  /* bool * --
 // #define RETRO_ENVIRONMENT_GET_CAN_DUPE  3  /* bool * --
 // #define RETRO_ENVIRONMENT_SET_MESSAGE   6  /* const struct retro_message * --
 // #define RETRO_ENVIRONMENT_SHUTDOWN      7  /* N/A (NULL) --
-// #define RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL 8
-//                                            /* const unsigned * --
-// #define RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY 9
-//                                            /* const char ** --
-// #define RETRO_ENVIRONMENT_SET_PIXEL_FORMAT 10
-//                                            /* const enum retro_pixel_format * --
-// #define RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS 11
-//                                            /* const struct retro_input_descriptor * --
-// #define RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK 12
-//                                            /* const struct retro_keyboard_callback * --
-// #define RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE 13
-//                                            /* const struct retro_disk_control_callback * --
-// #define RETRO_ENVIRONMENT_SET_HW_RENDER 14
-//                                            /* struct retro_hw_render_callback * --
-// #define RETRO_ENVIRONMENT_GET_VARIABLE 15
-//                                            /* struct retro_variable * --
-// #define RETRO_ENVIRONMENT_SET_VARIABLES 16
-//                                            /* const struct retro_variable * --
-// #define RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE 17
-//                                            /* bool * --
-// #define RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME 18
-//                                            /* const bool * --
-// #define RETRO_ENVIRONMENT_GET_LIBRETRO_PATH 19
-//                                            /* const char ** --
-// #define RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK 22
-//                                            /* const struct retro_audio_callback * --
-// #define RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK 21
-//                                            /* const struct retro_frame_time_callback * --
-// #define RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE 23
-//                                            /* struct retro_rumble_interface * --
-// #define RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES 24
-//                                            /* uint64_t * --
-// #define RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE (25 | RETRO_ENVIRONMENT_EXPERIMENTAL)
-//                                            /* struct retro_sensor_interface * --
-// #define RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE (26 | RETRO_ENVIRONMENT_EXPERIMENTAL)
-//                                            /* struct retro_camera_callback * --
-// #define RETRO_ENVIRONMENT_GET_LOG_INTERFACE 27
-//                                            /* struct retro_log_callback * --
-// #define RETRO_ENVIRONMENT_GET_PERF_INTERFACE 28
-//                                            /* struct retro_perf_callback * --
-// #define RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE 29
-//                                            /* struct retro_location_callback * --
-// #define RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY 30
-//                                            /* const char ** --
-// #define RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY 31
-//                                            /* const char ** --
-// #define RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO 32
-//                                            /* const struct retro_system_av_info * --
-// #define RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK 33
-//                                            /* const struct retro_get_proc_address_interface * --
-// #define RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO 34
-//                                            /* const struct retro_subsystem_info * --
-// #define RETRO_ENVIRONMENT_SET_CONTROLLER_INFO 35
-//                                            /* const struct retro_controller_info * --
-// #define RETRO_ENVIRONMENT_SET_MEMORY_MAPS (36 | RETRO_ENVIRONMENT_EXPERIMENTAL)
-//                                            /* const struct retro_memory_map * --
-// #define RETRO_ENVIRONMENT_SET_GEOMETRY 37
-//                                            /* const struct retro_game_geometry * --
-// #define RETRO_ENVIRONMENT_GET_USERNAME 38 
-//                                            /* const char **
-// #define RETRO_ENVIRONMENT_GET_LANGUAGE 39
-//                                            /* unsigned * --
-// 
-// #define RETRO_MEMDESC_CONST     (1 << 0)
-// #define RETRO_MEMDESC_BIGENDIAN (1 << 1)
-// #define RETRO_MEMDESC_ALIGN_2   (1 << 16)
-// #define RETRO_MEMDESC_ALIGN_4   (2 << 16)
-// #define RETRO_MEMDESC_ALIGN_8   (3 << 16)
-// #define RETRO_MEMDESC_MINSIZE_2 (1 << 24)
-// #define RETRO_MEMDESC_MINSIZE_4 (2 << 24)
-// #define RETRO_MEMDESC_MINSIZE_8 (3 << 24)
-// struct retro_memory_descriptor
-// {
-//    uint64_t flags;
-//    void *ptr;
-//    size_t offset;
-//    size_t start;
-//    size_t select;
-//    size_t disconnect;
-//    size_t len;
-//    const char *addrspace;
-// };
-// 
-// struct retro_memory_map
-// {
-//    const struct retro_memory_descriptor *descriptors;
-//    unsigned num_descriptors;
-// };
-// 
-// struct retro_controller_description
-// {
-//    const char *desc;
-//    unsigned id;
-// };
-// 
+// #define RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL 8 /* const unsigned * --
+// #define RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY 9 /* const char ** --
+// #define RETRO_ENVIRONMENT_SET_PIXEL_FORMAT 10 /* const enum retro_pixel_format * --
+// #define RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS 11 /* const struct retro_input_descriptor * --
+// #define RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK 12 /* const struct retro_keyboard_callback * --
+// #define RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE 13 /* const struct retro_disk_control_callback * --
+// #define RETRO_ENVIRONMENT_SET_HW_RENDER 14 /* struct retro_hw_render_callback * --
+// #define RETRO_ENVIRONMENT_GET_VARIABLE 15 /* struct retro_variable * --
+// #define RETRO_ENVIRONMENT_SET_VARIABLES 16 /* const struct retro_variable * --
+// #define RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE 17 /* bool * --
+// #define RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME 18 /* const bool * --
+// #define RETRO_ENVIRONMENT_GET_LIBRETRO_PATH 19 /* const char ** --
+// #define RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK 22 /* const struct retro_audio_callback * --
+// #define RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK 21 /* const struct retro_frame_time_callback * --
+// #define RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE 23 /* struct retro_rumble_interface * --
+// #define RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES 24 /* uint64_t * --
+// #define RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE 25 /* struct retro_sensor_interface * --
+// #define RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE 26 /* struct retro_camera_callback * --
+// #define RETRO_ENVIRONMENT_GET_LOG_INTERFACE 27 /* struct retro_log_callback * --
+// #define RETRO_ENVIRONMENT_GET_PERF_INTERFACE 28 /* struct retro_perf_callback * --
+// #define RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE 29 /* struct retro_location_callback * --
+// #define RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY 30 /* const char ** --
+// #define RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY 31 /* const char ** --
+// #define RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO 32 /* const struct retro_system_av_info * --
+// #define RETRO_ENVIRONMENT_SET_PROC_ADDRESS_CALLBACK 33 /* const struct retro_get_proc_address_interface * --
+// #define RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO 34 /* const struct retro_subsystem_info * --
+// #define RETRO_ENVIRONMENT_SET_CONTROLLER_INFO 35 /* const struct retro_controller_info * --
+// #define RETRO_ENVIRONMENT_SET_MEMORY_MAPS 36 /* const struct retro_memory_map * --
+// #define RETRO_ENVIRONMENT_SET_GEOMETRY 37 /* const struct retro_game_geometry * --
+// #define RETRO_ENVIRONMENT_GET_USERNAME 38  /* const char **
+// #define RETRO_ENVIRONMENT_GET_LANGUAGE 39 /* unsigned * --
+		
+		public const int MEMDESC_CONST     = (1 << 0);
+		public const int MEMDESC_BIGENDIAN = (1 << 1);
+		public const int MEMDESC_ALIGN_2   = (1 << 16);
+		public const int MEMDESC_ALIGN_4   = (2 << 16);
+		public const int MEMDESC_ALIGN_8   = (3 << 16);
+		public const int MEMDESC_MINSIZE_2 = (1 << 24);
+		public const int MEMDESC_MINSIZE_4 = (2 << 24);
+		public const int MEMDESC_MINSIZE_8 = (3 << 24);
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct memory_descriptor
+		{
+			public ulong flags;
+			public IntPtr ptr;
+			public UIntPtr offset;
+			public UIntPtr start;
+			public UIntPtr select;
+			public UIntPtr disconnect;
+			public UIntPtr len;
+			public string addrspace;
+		};
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct memory_map {
+			public IntPtr descriptors;
+			public uint num_descriptors;
+		}
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct controller_description
+		{
+			public string desc;
+			public uint id;
+		}
+		
 // struct retro_controller_info
 // {
 //    const struct retro_controller_description *types;
@@ -655,153 +732,208 @@ class LibretroRaw
 //    retro_replace_image_index_t replace_image_index;
 //    retro_add_image_index_t add_image_index;
 // };
-// 
-// enum retro_pixel_format
-// {
-//    RETRO_PIXEL_FORMAT_0RGB1555 = 0,
-//    RETRO_PIXEL_FORMAT_XRGB8888 = 1,
-//    RETRO_PIXEL_FORMAT_RGB565   = 2,
-//    RETRO_PIXEL_FORMAT_UNKNOWN  = INT_MAX
-// };
-// 
-// struct retro_message
-// {
-//    const char *msg;
-//    unsigned    frames;
-// };
-// 
-// struct retro_input_descriptor
-// {
-//    unsigned port;
-//    unsigned device;
-//    unsigned index;
-//    unsigned id;
-//    const char *description; 
-// };
-
-	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-	//should be Utf8, but that doesn't exist. https://github.com/dotnet/coreclr/issues/1012
-	//and even if it did exist, this module is designed to be compatible with .NET 2.0
-	public struct retro_system_info {
-		public string library_name;
-		public string library_version;
-		public string valid_extensions;
-		[MarshalAs(UnmanagedType.I1)] public bool need_fullpath;
-		[MarshalAs(UnmanagedType.I1)] public bool block_extract;
-	};
-
-// struct retro_game_geometry
-// {
-//    unsigned base_width;
-//    unsigned base_height;
-//    unsigned max_width;
-//    unsigned max_height;
-// 
-//    float aspect_ratio;
-// };
-// 
-// struct retro_system_timing
-// {
-//    double fps;
-//    double sample_rate;
-// };
-// 
-// struct retro_system_av_info
-// {
-//    struct retro_game_geometry geometry;
-//    struct retro_system_timing timing;
-// };
-// 
-// struct retro_variable
-// {
-//    const char *key;
-//    const char *value;
-// };
-// 
-// struct retro_game_info
-// {
-//    const char *path;
-//    const void *data;
-//    size_t      size;
-//    const char *meta;
-// };
-// 
-	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	public delegate bool retro_environment_t(uint cmd, IntPtr data);
-// 
-// typedef void (*retro_video_refresh_t)(const void *data, unsigned width,
-//       unsigned height, size_t pitch);
-// 
-// typedef void (*retro_audio_sample_t)(int16_t left, int16_t right);
-// 
-// typedef size_t (*retro_audio_sample_batch_t)(const int16_t *data,
-//       size_t frames);
-// 
-// typedef void (*retro_input_poll_t)(void);
-// 
-// typedef int16_t (*retro_input_state_t)(unsigned port, unsigned device, 
-//       unsigned index, unsigned id);
-// 
-	[DllImport("snes9x_libretro.dll")]
-	public static extern void retro_set_environment([MarshalAs(UnmanagedType.FunctionPtr)]retro_environment_t env);
-// void retro_set_video_refresh(retro_video_refresh_t);
-// void retro_set_audio_sample(retro_audio_sample_t);
-// void retro_set_audio_sample_batch(retro_audio_sample_batch_t);
-// void retro_set_input_poll(retro_input_poll_t);
-// void retro_set_input_state(retro_input_state_t);
-// 
-	[DllImport("snes9x_libretro.dll")]
-	public static extern void retro_init();
-	[DllImport("snes9x_libretro.dll")]
-	public static extern void retro_deinit();
+		
+		public enum pixel_format {
+			XRGB1555,
+			XRGB8888,
+			RGB565
+		}
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct message
+		{
+			public string msg;
+			public uint frames;
+		}
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct input_descriptor
+		{
+			public uint port;
+			public uint device;
+			public uint index;
+			public uint id;
+			public string description;
+		}
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct system_info {
+			public string library_name;
+			public string library_version;
+			public string valid_extensions;
+			[MarshalAs(UnmanagedType.U1)] public bool need_fullpath;
+			[MarshalAs(UnmanagedType.U1)] public bool block_extract;
+		};
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct game_geometry {
+			public uint base_width;
+			public uint base_height;
+			public uint max_width;
+			public uint max_height;
+			
+			public float aspect_ratio;
+		};
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct system_timing {
+			public double fps;
+			public double sample_rate;
+		};
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct system_av_info {
+			public IntPtr geometry;//public game_geometry geometry;
+			public IntPtr timing;//public system_timing timing;
+		};
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct variable {
+			public string key;
+			public string value;
+		};
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		public struct game_info {
+			public string path;
+			public IntPtr data;
+			public UIntPtr size;
+			public string meta;
+		};
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool environment_t(uint cmd, IntPtr data);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void video_refresh_t(IntPtr data, uint width, uint height, UIntPtr pitch);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void audio_sample_t(short left, short right);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void audio_sample_batch_t(IntPtr data, UIntPtr frames);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void input_poll_t();
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate short input_state_t(uint port, uint device, uint index, uint id);
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void set_environment_t([MarshalAs(UnmanagedType.FunctionPtr)]environment_t env);
+		public set_environment_t set_environment;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void set_audio_sample_t([MarshalAs(UnmanagedType.FunctionPtr)]audio_sample_t env);
+		public set_audio_sample_t set_audio_sample;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void set_audio_sample_batch_t([MarshalAs(UnmanagedType.FunctionPtr)]audio_sample_batch_t env);
+		public set_audio_sample_batch_t set_audio_sample_batch;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void set_input_poll_t([MarshalAs(UnmanagedType.FunctionPtr)]input_poll_t env);
+		public set_input_poll_t set_input_poll;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void set_input_state_t([MarshalAs(UnmanagedType.FunctionPtr)]input_state_t env);
+		public set_input_state_t set_input_state;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void init_t();
+		public init_t init;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void deinit_t();
+		public deinit_t deinit;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate uint api_version_t();
+		public api_version_t api_version;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void get_system_info_t(out system_info info);
+		public get_system_info_t get_system_info;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void get_system_av_info_t(IntPtr info);//retro_system_av_info
+		public get_system_av_info_t get_system_av_info;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void set_controller_port_device_t(uint port, uint device);
+		public set_controller_port_device_t set_controller_port_device;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void reset_t();
+		public reset_t reset;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void run_t();
+		public run_t run;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate UIntPtr serialize_size_t();
+		public serialize_size_t serialize_size;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool serialize_t(IntPtr data, UIntPtr size);
+		public serialize_t serialize;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool unserialize_t(IntPtr data, UIntPtr size);
+		public unserialize_t unserialize;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void cheat_reset_t();
+		public cheat_reset_t cheat_reset;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		public delegate void cheat_set_t(uint index, [MarshalAs(UnmanagedType.U1)] bool enabled, string code);
+		public cheat_set_t cheat_set;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool load_game_t(IntPtr game);//retro_game_info
+		public load_game_t load_game;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.U1)]
+		public delegate bool load_game_special_t(uint game_type, IntPtr info, UIntPtr num_info);//retro_game_info[]
+		public load_game_special_t load_game_special;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void unload_game_t(out system_info info);
+		public unload_game_t unload_game;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate uint get_region_t();
+		public get_region_t get_region;
+		
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate IntPtr get_memory_data_t(uint id);
+		public get_memory_data_t get_memory_data;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate UIntPtr get_memory_size_t(uint id);
+		public get_memory_size_t get_memory_size;
+	}
 	
-	[DllImport("snes9x_libretro.dll")]
-	public static extern uint retro_api_version();
+	Raw raw;
 	
-	[DllImport("snes9x_libretro.dll")]
-	public static extern void retro_get_system_info(out retro_system_info info);
-
-// void retro_get_system_av_info(struct retro_system_av_info *info);
-// 
-// void retro_set_controller_port_device(unsigned port, unsigned device);
-// 
-// void retro_reset(void);
-// 
-// void retro_run(void);
-// 
-// size_t retro_serialize_size(void);
-// 
-// bool retro_serialize(void *data, size_t size);
-// bool retro_unserialize(const void *data, size_t size);
-// 
-// void retro_cheat_reset(void);
-// void retro_cheat_set(unsigned index, bool enabled, const char *code);
-// 
-// bool retro_load_game(const struct retro_game_info *game);
-// 
-// bool retro_load_game_special(
-//   unsigned game_type,
-//   const struct retro_game_info *info, size_t num_info
-// );
-// 
-// void retro_unload_game(void);
-// 
-// unsigned retro_get_region(void);
-// 
-// void *retro_get_memory_data(unsigned id);
-// size_t retro_get_memory_size(unsigned id);
+	public Libretro(string dll)
+	{
+		raw = new Raw(dll);
+		System.Console.WriteLine(raw.api_version());
+		
+		Raw.system_info info;
+		raw.get_system_info(out info);
+		System.Console.WriteLine(info.library_name);
+	}
 }
 
 class TinyGUI
 {
 	static void Main()
 	{
-		System.Console.WriteLine(LibretroRaw.retro_api_version());
-		LibretroRaw.retro_system_info info;
-		LibretroRaw.retro_get_system_info(out info);
-		System.Console.WriteLine(info.library_name);
+		Libretro core = new Libretro("snes9x_libretro.dll");
 		
-		LibretroRaw.retro_set_environment(env);
+		//System.Console.WriteLine(LibretroRaw.api_version());
+		
+		//LibretroRaw.system_info info;
+		//LibretroRaw.get_system_info(out info);
+		//System.Console.WriteLine(info.library_name);
+		//
+		//LibretroRaw.set_environment(env);
+		//LibretroRaw.init();
+		//
+		//
 	}
 	
 	static bool env(uint cmd, IntPtr data)
@@ -810,3 +942,6 @@ class TinyGUI
 		return false;
 	}
 }
+
+
+
