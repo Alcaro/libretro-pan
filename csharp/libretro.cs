@@ -33,6 +33,7 @@ class Libretro {
 			if (DllHandle == IntPtr.Zero) Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
 			
 			set_environment = (set_environment_t)LoadFromDLL("retro_set_environment", typeof(set_environment_t));
+			set_video_refresh = (set_video_refresh_t)LoadFromDLL("retro_set_video_refresh", typeof(set_video_refresh_t));
 			set_audio_sample = (set_audio_sample_t)LoadFromDLL("retro_set_audio_sample", typeof(set_audio_sample_t));
 			set_audio_sample_batch = (set_audio_sample_batch_t)LoadFromDLL("retro_set_audio_sample_batch", typeof(set_audio_sample_batch_t));
 			set_input_poll = (set_input_poll_t)LoadFromDLL("retro_set_input_poll", typeof(set_input_poll_t));
@@ -177,16 +178,19 @@ class Libretro {
 		public delegate void set_environment_t([MarshalAs(UnmanagedType.FunctionPtr)]environment_t env);
 		public set_environment_t set_environment;
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void set_audio_sample_t([MarshalAs(UnmanagedType.FunctionPtr)]audio_sample_t env);
+		public delegate void set_video_refresh_t([MarshalAs(UnmanagedType.FunctionPtr)]video_refresh_t video);
+		public set_video_refresh_t set_video_refresh;
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void set_audio_sample_t([MarshalAs(UnmanagedType.FunctionPtr)]audio_sample_t audio);
 		public set_audio_sample_t set_audio_sample;
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void set_audio_sample_batch_t([MarshalAs(UnmanagedType.FunctionPtr)]audio_sample_batch_t env);
+		public delegate void set_audio_sample_batch_t([MarshalAs(UnmanagedType.FunctionPtr)]audio_sample_batch_t audio_batch);
 		public set_audio_sample_batch_t set_audio_sample_batch;
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void set_input_poll_t([MarshalAs(UnmanagedType.FunctionPtr)]input_poll_t env);
+		public delegate void set_input_poll_t([MarshalAs(UnmanagedType.FunctionPtr)]input_poll_t poll);
 		public set_input_poll_t set_input_poll;
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void set_input_state_t([MarshalAs(UnmanagedType.FunctionPtr)]input_state_t env);
+		public delegate void set_input_state_t([MarshalAs(UnmanagedType.FunctionPtr)]input_state_t state);
 		public set_input_state_t set_input_state;
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -248,7 +252,7 @@ class Libretro {
 		public load_game_special_t load_game_special;
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void unload_game_t(ref system_info info);
+		public delegate void unload_game_t();
 		public unload_game_t unload_game;
 		
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -610,9 +614,9 @@ class Libretro {
 	{
 		public string desc;
 		public string valid_extensions;
-		[MarshalAs(UnmanagedType.U1)] public bool need_fullpath;
-		[MarshalAs(UnmanagedType.U1)] public bool block_extract;
-		[MarshalAs(UnmanagedType.U1)] public bool required;
+		public bool need_fullpath;
+		public bool block_extract;
+		public bool required;
 		public subsystem_memory_info[] memory;
 		public uint num_memory;
 	};
@@ -982,10 +986,9 @@ class Libretro {
 		public string value;
 	};
 	
-	public unsafe struct game_info {
+	public struct game_info {
 		public string path;
-		public byte* data;
-		public ulong size;
+		public byte[] data;
 		public string meta;
 	};
 	
@@ -997,6 +1000,149 @@ class Libretro {
 	{
 		raw = new Raw(dll);
 	}
+	
+	
+	public void init()
+	{
+		raw.set_environment(i_env);
+		raw.set_video_refresh(i_video);
+		raw.set_audio_sample(i_audio);
+		raw.set_audio_sample_batch(i_audio_batch);
+		raw.set_input_poll(i_input_poll);
+		raw.set_input_state(i_input_state);
+		raw.init();
+	}
+	
+	public void deinit()
+	{
+		raw.deinit();
+	}
+	
+	public system_info get_system_info()
+	{
+		system_info info = new system_info();
+		raw.get_system_info(out info);
+		return info;
+	}
+	public system_av_info get_system_av_info()
+	{
+		Raw.system_av_info rawinfo = new Raw.system_av_info();
+		raw.get_system_av_info(out rawinfo);
+		system_av_info info = new system_av_info();
+		//TODO: copy
+		return info;
+	}
+	
+	public void set_controller_port_device_t(uint port, uint device)
+	{
+		raw.set_controller_port_device(port, device);
+	}
+	
+	public void reset()
+	{
+		raw.reset();
+	}
+	
+	public void run()
+	{
+		raw.run();
+	}
+	
+	public ulong serialize_size()
+	{
+		return raw.serialize_size().ToUInt64();
+	}
+	
+	public void serialize(byte[] data)
+	{
+		//ulong size = serialize_size();
+		//if (size==0) throw new InvalidOperationException("Core does not support serialization");
+		//
+		//if (data.Length < serialize_size()) throw new ArgumentException("Too small buffer", "data");
+		
+		unsafe {
+			fixed (byte* p = data)
+			{
+				if (!raw.serialize((IntPtr)p, new UIntPtr((uint)data.Length)))
+				{
+					throw new InvalidOperationException("Serialization failed");
+				}
+			}
+		}
+	}
+	
+	public byte[] serialize()
+	{
+		byte[] data = new byte[serialize_size()];
+		serialize(data);
+		return data;
+	}
+	
+	public void unserialize(byte[] data)
+	{
+		//if (data.Length < serialize_size()) throw new ArgumentException("Too small buffer", "data");
+		
+		unsafe {
+			fixed (byte* p = data)
+			{
+				if (!raw.unserialize((IntPtr)p, new UIntPtr((uint)data.Length)))
+				{
+					throw new InvalidOperationException("Unserialization failed");
+				}
+			}
+		}
+	}
+	
+	public void cheat_reset()
+	{
+		raw.cheat_reset();
+	}
+	public void cheat_set(uint index, bool enabled, string code)
+	{
+		raw.cheat_set(index, enabled, code);
+	}
+	
+	public void load_game(game_info game)
+	{
+		unsafe
+		{
+			fixed(byte* bytes = game.data)
+			{
+				Raw.game_info rawgame;
+				rawgame.path = game.path;
+				rawgame.data = new IntPtr(bytes);
+				rawgame.size = new UIntPtr((uint)game.data.Length);
+				rawgame.meta = game.meta;
+				raw.load_game(ref rawgame);
+			}
+		}
+	}
+	public void load_game_special(uint game_type, game_info[] info)
+	{
+		//TODO
+		throw new InvalidOperationException("Not implemented");
+	}
+	
+	public void unload_game()
+	{
+		raw.unload_game();
+	}
+	
+	public Region get_region()
+	{
+		return (Region)raw.get_region();
+	}
+	
+	public unsafe byte* get_memory_data(uint id)
+	{
+		return (byte*)raw.get_memory_data(id).ToPointer();
+	}
+	public ulong get_memory_size(uint id)
+	{
+		return raw.get_memory_size(id).ToUInt64();
+	}
+	
+	
 	
 	bool i_env(uint cmd, IntPtr data)
 	{
@@ -1080,155 +1226,89 @@ class Libretro {
 	public delegate void log_cb_t(LogLevel level, string text);
 	public log_cb_t log_cb;
 	
+	
+	void i_video(IntPtr data, uint width, uint height, UIntPtr pitch)
+	{
+		unsafe {
+			video_cb(data.ToPointer(), width, height, pitch.ToUInt64());
+		}
+	}
+	
+	
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//[return: MarshalAs(UnmanagedType.U1)]
+		//public delegate bool environment_t(uint cmd, IntPtr data);//void*
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void video_refresh_t(IntPtr data, uint width, uint height, UIntPtr pitch);//void[]
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void audio_sample_t(short left, short right);
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void audio_sample_batch_t(IntPtr data, UIntPtr frames);//int16_t[]
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate void input_poll_t();
+		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		//public delegate short input_state_t(uint port, uint device, uint index, uint id);
+		//raw.set_video(i_video);
+		//raw.set_audio(i_audio);
+		//raw.set_audio_batch(i_audio_batch);
+		//raw.set_input_poll(i_input_poll);
+		//raw.set_input_state(i_input_state);
+	
 	public unsafe delegate void video_cb_t(void* data, uint width, uint height, ulong pitch);
 	public video_cb_t video_cb;
+	
+	void i_audio(short left, short right)
+	{
+		if (audio_cb != null) audio_cb(left, right);
+		else
+		{
+			short[] data={left, right};
+			unsafe
+			{
+				fixed(short* dataptr = data)
+				{
+					audio_batch_cb(dataptr, 1);
+				}
+			}
+		}
+	}
 	
 	public delegate void audio_cb_t(short left, short right);
 	public audio_cb_t audio_cb;
 	
+	void i_audio_batch(IntPtr wdata, UIntPtr wframes) // w for wrapped
+	{
+		unsafe {
+			short* data = (short*)wdata.ToPointer();
+			ulong frames = wframes.ToUInt64();
+			
+			if (audio_batch_cb != null) audio_batch_cb(data, frames);
+			else
+			{
+				for (ulong i=0;i<frames;i++)
+				{
+					audio_cb(data[i*2], data[i*2+1]);
+				}
+			}
+		}
+	}
+	
 	public unsafe delegate void audio_batch_cb_t(short* data, ulong frames);
 	public audio_batch_cb_t audio_batch_cb;
+	
+	void i_input_poll()
+	{
+		if (input_poll_cb != null) input_poll_cb();
+	}
 	
 	public delegate void input_poll_cb_t();
 	public input_poll_cb_t input_poll_cb;
 	
+	short i_input_state(uint port, uint device, uint index, uint id)
+	{
+		return input_state_cb(port, device, index, id);
+	}
+	
 	public delegate short input_state_cb_t(uint port, uint device, uint index, uint id);
 	public input_state_cb_t input_state_cb;
-	
-	public void init()
-	{
-		raw.set_environment(i_env);
-		//raw.set_video();
-		//raw.set_audio();
-		//raw.set_audio_batch();
-		//raw.set_input_poll();
-		//raw.set_input_state();
-		raw.init();
-	}
-	
-	public void deinit()
-	{
-		raw.deinit();
-	}
-	
-	public system_info get_system_info()
-	{
-		system_info info = new system_info();
-		raw.get_system_info(out info);
-		return info;
-	}
-	public system_av_info get_system_av_info()
-	{
-		system_av_info info = new system_av_info();
-		raw.get_system_av_info(out info);
-		return info;
-	}
-	
-	public void set_controller_port_device_t(uint port, uint device)
-	{
-		raw.set_controller_port_device(port, device);
-	}
-	
-	public void reset()
-	{
-		raw.reset();
-	}
-	
-	public void run()
-	{
-		raw.run();
-	}
-	
-	public ulong serialize_size()
-	{
-		return raw.serialize_size().ToInt64();
-	}
-	
-	public void serialize(byte[] data)
-	{
-		ulong size = serialize_size();
-		if (size==0) throw new InvalidOperationException("Core does not support serialization");
-		
-		if (data.Length < serialize_size()) throw new ArgumentException("Too small buffer", "data");
-		
-		fixed (byte* p = buffer)
-		{
-			if (!raw.serialize((IntPtr)p))
-			{
-				throw new InvalidOperationException("Serialization failed");
-			}
-		}
-	}
-	
-	public byte[] serialize()
-	{
-		byte[] data = new byte[serialize_size()];
-		serialize(data);
-	}
-	
-	public void unserialize(byte[] data)
-	{
-		if (data.Length < serialize_size()) throw new ArgumentException("Too small buffer", "data");
-		
-		fixed (byte* p = buffer)
-		{
-			if (!raw.unserialize((IntPtr)p))
-			{
-				throw new InvalidOperationException("Unserialization failed");
-			}
-		}
-	}
-	
-	public void cheat_reset()
-	{
-		raw.cheat_reset();
-	}
-	public void cheat_set(uint index, bool enabled, string code)
-	{
-		raw.cheat_set(index, enabled, code);
-	}
-	
-	public void load_game(game_info game)
-	{
-		raw.load_game(ref game);
-	}
-	public void load_game_special(uint game_type, game_info[] info)
-	{
-		//TODO
-		throw new InvalidOperationException("Not implemented");
-	}
-	
-	public void unload_game()
-	{
-		raw.unload_game();
-	}
-	
-	public Region get_region()
-	{
-		return (Region)raw.get_region();
-	}
-	
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate IntPtr get_memory_data_t(uint id);
-		//public get_memory_data_t get_memory_data;
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate UIntPtr get_memory_size_t(uint id);
-		//public get_memory_size_t get_memory_size;
-		
-}
-
-class TinyGUI
-{
-	static void Main()
-	{
-		//Libretro core = new Libretro("snes9x_libretro.dll");
-		Libretro core = new Libretro("minir_testcore_libretro.dll");
-		core.log_cb = log;
-		core.init();
-	}
-	
-	static void log(Libretro.LogLevel level, string text)
-	{
-		System.Console.WriteLine("Log: "+text);
-	}
 }
