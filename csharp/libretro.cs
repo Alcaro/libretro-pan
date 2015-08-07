@@ -148,8 +148,10 @@ class Libretro {
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct system_av_info {
-			public IntPtr geometry;//game_geometry*
-			public IntPtr timing;//system_timing*
+			[MarshalAs(UnmanagedType.Struct)]
+			public game_geometry geometry;
+			[MarshalAs(UnmanagedType.Struct)]
+			public system_timing timing;
 		};
 		
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -974,10 +976,11 @@ class Libretro {
 		public double sample_rate;
 	};
 	
-	[StructLayout(LayoutKind.Sequential)]
 	public struct system_av_info {
 		public game_geometry geometry;
 		public system_timing timing;
+		
+		public pixel_format pixfmt;
 	};
 	
 	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -987,6 +990,14 @@ class Libretro {
 	};
 	
 	public struct game_info {
+		public game_info(string path_) { path=path_; data=null; meta=null; }
+		public game_info(byte[] data_) { data=data_; path=null; meta=null; }
+		
+		public game_info(string path_, string meta_) { path=path_; meta=meta_; data=null; }
+		public game_info(byte[] data_, string meta_) { data=data_; meta=meta_; path=null; }
+		
+		public game_info(string path_, byte[] data_, string meta_) { path=path_; data=data_; meta=meta_; }
+		
 		public string path;
 		public byte[] data;
 		public string meta;
@@ -995,6 +1006,7 @@ class Libretro {
 	
 	
 	Raw raw;
+	pixel_format pixfmt;
 	
 	public Libretro(string dll)
 	{
@@ -1029,7 +1041,9 @@ class Libretro {
 		Raw.system_av_info rawinfo = new Raw.system_av_info();
 		raw.get_system_av_info(out rawinfo);
 		system_av_info info = new system_av_info();
-		//TODO: copy
+		info.geometry = rawinfo.geometry;
+		info.timing = rawinfo.timing;
+		info.pixfmt = this.pixfmt;
 		return info;
 	}
 	
@@ -1055,11 +1069,6 @@ class Libretro {
 	
 	public void serialize(byte[] data)
 	{
-		//ulong size = serialize_size();
-		//if (size==0) throw new InvalidOperationException("Core does not support serialization");
-		//
-		//if (data.Length < serialize_size()) throw new ArgumentException("Too small buffer", "data");
-		
 		unsafe {
 			fixed (byte* p = data)
 			{
@@ -1080,8 +1089,6 @@ class Libretro {
 	
 	public void unserialize(byte[] data)
 	{
-		//if (data.Length < serialize_size()) throw new ArgumentException("Too small buffer", "data");
-		
 		unsafe {
 			fixed (byte* p = data)
 			{
@@ -1104,17 +1111,29 @@ class Libretro {
 	
 	public void load_game(game_info game)
 	{
-		unsafe
+		if (game.data != null)
 		{
-			fixed(byte* bytes = game.data)
+			unsafe
 			{
-				Raw.game_info rawgame;
-				rawgame.path = game.path;
-				rawgame.data = new IntPtr(bytes);
-				rawgame.size = new UIntPtr((uint)game.data.Length);
-				rawgame.meta = game.meta;
-				raw.load_game(ref rawgame);
+				fixed(byte* bytes = game.data)
+				{
+					Raw.game_info rawgame;
+					rawgame.path = game.path;
+					rawgame.data = new IntPtr(bytes);
+					rawgame.size = new UIntPtr((uint)game.data.Length);
+					rawgame.meta = game.meta;
+					raw.load_game(ref rawgame);
+				}
 			}
+		}
+		else
+		{
+			Raw.game_info rawgame;
+			rawgame.path = game.path;
+			rawgame.data = IntPtr.Zero;
+			rawgame.size = UIntPtr.Zero;
+			rawgame.meta = game.meta;
+			raw.load_game(ref rawgame);
 		}
 	}
 	public void load_game_special(uint game_type, game_info[] info)
@@ -1156,7 +1175,11 @@ class Libretro {
 			//case Environment.Shutdown: // N/A (NULL)
 			//case Environment.SetPerformanceLevel: // const unsigned *
 			//case Environment.GetSystemDirectory: // const char **
-			//case Environment.SetPixelFormat: // const enum retro_pixel_format *
+			case Environment.SetPixelFormat: // const enum retro_pixel_format *
+			{
+				this.pixfmt = (pixel_format)Marshal.ReadInt32(data);
+				return true;
+			}
 			//case Environment.SetInputDescriptors: // const struct retro_input_descriptor *
 			//case Environment.SetKeyboardCallback: // const struct retro_keyboard_callback *
 			//case Environment.SetDiskControlInterface: // const struct retro_disk_control_callback *
@@ -1229,32 +1252,10 @@ class Libretro {
 	
 	void i_video(IntPtr data, uint width, uint height, UIntPtr pitch)
 	{
-		unsafe {
-			video_cb(data.ToPointer(), width, height, pitch.ToUInt64());
-		}
+		video_cb(data, width, height, pitch.ToUInt32());
 	}
 	
-	
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.U1)]
-		//public delegate bool environment_t(uint cmd, IntPtr data);//void*
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void video_refresh_t(IntPtr data, uint width, uint height, UIntPtr pitch);//void[]
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void audio_sample_t(short left, short right);
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void audio_sample_batch_t(IntPtr data, UIntPtr frames);//int16_t[]
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate void input_poll_t();
-		//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		//public delegate short input_state_t(uint port, uint device, uint index, uint id);
-		//raw.set_video(i_video);
-		//raw.set_audio(i_audio);
-		//raw.set_audio_batch(i_audio_batch);
-		//raw.set_input_poll(i_input_poll);
-		//raw.set_input_state(i_input_state);
-	
-	public unsafe delegate void video_cb_t(void* data, uint width, uint height, ulong pitch);
+	public unsafe delegate void video_cb_t(IntPtr data, uint width, uint height, uint pitch);
 	public video_cb_t video_cb;
 	
 	void i_audio(short left, short right)
@@ -1267,7 +1268,7 @@ class Libretro {
 			{
 				fixed(short* dataptr = data)
 				{
-					audio_batch_cb(dataptr, 1);
+					audio_batch_cb(new IntPtr(dataptr), 1);
 				}
 			}
 		}
@@ -1276,24 +1277,25 @@ class Libretro {
 	public delegate void audio_cb_t(short left, short right);
 	public audio_cb_t audio_cb;
 	
-	void i_audio_batch(IntPtr wdata, UIntPtr wframes) // w for wrapped
+	void i_audio_batch(IntPtr data, UIntPtr frames) // w for wrapped
 	{
-		unsafe {
-			short* data = (short*)wdata.ToPointer();
-			ulong frames = wframes.ToUInt64();
-			
-			if (audio_batch_cb != null) audio_batch_cb(data, frames);
-			else
-			{
-				for (ulong i=0;i<frames;i++)
+		ulong nframes = frames.ToUInt64();
+		
+		if (audio_batch_cb != null) audio_batch_cb(data, nframes);
+		else
+		{
+			unsafe {
+				short* ptr = (short*)data.ToPointer();
+				
+				for (ulong i=0;i<nframes;i++)
 				{
-					audio_cb(data[i*2], data[i*2+1]);
+					audio_cb(ptr[i*2], ptr[i*2+1]);
 				}
 			}
 		}
 	}
 	
-	public unsafe delegate void audio_batch_cb_t(short* data, ulong frames);
+	public unsafe delegate void audio_batch_cb_t(IntPtr data, ulong frames);
 	public audio_batch_cb_t audio_batch_cb;
 	
 	void i_input_poll()
