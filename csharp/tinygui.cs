@@ -10,8 +10,6 @@ using System.Drawing.Imaging;
 
 class TinyGUI
 {
-	Libretro.pixel_format pixfmt;
-	
 	TinyDDraw draw;
 	
 	TinyGUI()
@@ -28,17 +26,16 @@ class TinyGUI
 		core.load_game(new Libretro.game_info("smw.sfc"));
 		
 		Libretro.system_av_info av = core.get_system_av_info();
-		this.pixfmt = av.pixfmt;
 		
 		System.Console.WriteLine(av.geometry.base_width);
 		System.Console.WriteLine(av.geometry.base_height);
 		
 		Form form = new Form();
-		form.Size = new Size((int)av.geometry.base_width, (int)av.geometry.base_height);
-		draw = new TinyDDraw(form);
+		form.ClientSize = new Size((int)av.geometry.base_width, (int)av.geometry.base_height);
+		draw = new TinyDDraw(form, av.geometry.base_width, av.geometry.base_height, av.pixfmt);
 		form.Show();
 		
-		for (int i=0;i<60;i++)
+		for (int i=0;i<6000;i++)
 		{
 			core.run();
 			Application.DoEvents();
@@ -71,13 +68,16 @@ class TinyGUI
 	}
 }
 
+
 class TinyDDraw
 {
 	Device dev;
 	Surface surf_front;
 	Surface surf_back;
 	
-	public TinyDDraw(Form parent)
+	Libretro.pixel_format pixfmt;
+	
+	public TinyDDraw(Form parent, uint width, uint height, Libretro.pixel_format pixfmt)
 	{
 		dev = new Device();
 		dev.SetCooperativeLevel(parent, CooperativeLevelFlags.Normal);
@@ -87,23 +87,14 @@ class TinyDDraw
 		surf_front = new Surface(desc, dev);
 		
 		desc.Clear();
-		desc.Width = surf_front.SurfaceDescription.Width;
-		desc.Height = surf_front.SurfaceDescription.Height;
-System.Console.WriteLine("XXY");
-System.Console.WriteLine(desc.Width);
-System.Console.WriteLine(desc.Height);
+		desc.Width = (int)width;
+		desc.Height = (int)height;
 		desc.SurfaceCaps.OffScreenPlain = true;
-
-System.Console.WriteLine("A");
 		surf_back = new Surface(desc, dev);
-System.Console.WriteLine("b");
 		
 		Clipper clip = new Clipper(dev);
-System.Console.WriteLine("c");
 		clip.Window = parent;
-System.Console.WriteLine("d");
 		surf_front.Clipper = clip;
-System.Console.WriteLine("e");
 	}
 	
 	[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -121,8 +112,23 @@ System.Console.WriteLine("e");
 	
 	public void video(IntPtr data, uint width, uint height, uint pitch)
 	{
-		//BitmapData bmpdat = bmp.LockBits(new Rectangle(0, 0, (int)width, (int)height), ImageLockMode.WriteOnly, bmp_formats[(int)pixfmt]);
-		//video_copy(bmpdat.Scan0, (uint)bmpdat.Stride, data, pitch, (pixfmt == Libretro.pixel_format.XRGB8888 ? 4u : 2u) * width, height);
-		//bmp.UnlockBits(bmpdat);
+		try
+		{
+			LockedData target = surf_back.Lock(LockFlags.WriteOnly);
+System.Console.WriteLine(target.Pitch);
+			uint rowwidth = (pixfmt == Libretro.pixel_format.XRGB8888 ? 4u : 2u) * width;
+			video_copy(target.Data.InternalData, (uint)target.Pitch, data, pitch, rowwidth, height);
+			surf_back.Unlock();
+			
+			surf_front.Draw(surf_back, DrawFlags.Wait);
+		}
+		catch(WasStillDrawingException)
+		{
+			return;
+		}
+		catch(SurfaceLostException)
+		{
+			//display.RestoreAllSurfaces();
+		}
 	}
 }
