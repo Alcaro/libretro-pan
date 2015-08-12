@@ -18,7 +18,9 @@ If a language is covered by an external project, libretro-pan has no interest in
 | ---- | ---- |
 | C | External: Multiple; [nanoarch](https://github.com/heuripedes/nanoarch/) is the best example of how to make more |
 | C++ | External: Multiple; [Pantheon](https://github.com/Druage/Pantheon) and [minir](https://github.com/Alcaro/minir), for example |
-| C# | In progress |
+| CoffeeScript | JS and Coffee can't use native shared libraries; they have to be compiled with Emscripten. For example [GameTime Player](https://github.com/matthewbauer/gametime-player). |
+| JavaScript | No known frontends, but see CoffeeScript. |
+| C# | Halted because C# DirectDraw keeps being stupid. |
 | Python 3 | Halted because Linux Mint 17's pygame does not support Python 3 |
 | Python 2 | Halted because pygame does not support vsync nor streaming audio (seemingly poor CFFI integration, too) |
 | Objective-C | Not started |
@@ -28,7 +30,6 @@ If a language is covered by an external project, libretro-pan has no interest in
 | PHP | FFI capabilities being researched |
 | Perl | FFI capabilities being researched |
 | Java | FFI capabilities being researched |
-| JavaScript | FFI capabilities being researched |
 | Ruby | FFI capabilities being researched |
 | Unix shell (any) | FFI capabilities being researched |
 | D | No interest shown yet |
